@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block page_name %}search{% endblock %}
+{% block stylesheets %}
+  <link rel="stylesheet" href="{{ asset('css/search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- Sidebar filters -->
+    <aside class="sidebar">
+      <form>
+        <!-- Subjects -->
+        <div class="filter-group">
+          <h2>Предмети (до 4):</h2>
+          <div class="subjects-list">
+            <div class="subject-row">
+              <select name="subject1" required>
+                <option value="" disabled selected>Предмет №1</option>
+                <option>Українська мова</option>
+                <option>Математика</option>
+                <option>Історія України</option>
+                <option>Англійська мова</option>
+                <option>Німецька мова</option>
+                <option>Французька мова</option>
+                <option>Іспанська мова</option>
+                <option>Українська література</option>
+                <option>Хімія</option>
+                <option>Біологія</option>
+                <option>Географія</option>
+                <option>Фізика</option>
+              </select>
+              <input type="number" name="score1" placeholder="Бал" min="0" max="200" required>
+            </div>
+            <div class="subject-row">
+              <select name="subject2">
+                <option value="" disabled selected>Предмет №2</option>
+                <option>Українська мова</option>
+                <option>Математика</option>
+                <option>Історія України</option>
+                <option>Англійська мова</option>
+                <option>Німецька мова</option>
+                <option>Французька мова</option>
+                <option>Іспанська мова</option>
+                <option>Українська література</option>
+                <option>Хімія</option>
+                <option>Біологія</option>
+                <option>Географія</option>
+                <option>Фізика</option>
+              </select>
+              <input type="number" name="score2" placeholder="Бал" min="0" max="200">
+            </div>
+            <div class="subject-row">
+              <select name="subject3">
+                <option value="" disabled selected>Предмет №3</option>
+                <option>Українська мова</option>
+                <option>Математика</option>
+                <option>Історія України</option>
+                <option>Англійська мова</option>
+                <option>Німецька мова</option>
+                <option>Французька мова</option>
+                <option>Іспанська мова</option>
+                <option>Українська література</option>
+                <option>Хімія</option>
+                <option>Біологія</option>
+                <option>Географія</option>
+                <option>Фізика</option>
+              </select>
+              <input type="number" name="score3" placeholder="Бал" min="0" max="200">
+            </div>
+            <div class="subject-row">
+              <select name="subject4">
+                <option value="" disabled selected>Предмет №4</option>
+                <option>Українська мова</option>
+                <option>Математика</option>
+                <option>Історія України</option>
+                <option>Англійська мова</option>
+                <option>Німецька мова</option>
+                <option>Французька мова</option>
+                <option>Іспанська мова</option>
+                <option>Українська література</option>
+                <option>Хімія</option>
+                <option>Біологія</option>
+                <option>Географія</option>
+                <option>Фізика</option>
+              </select>
+              <input type="number" name="score4" placeholder="Бал" min="0" max="200">
+            </div>
+          </div>
+        </div>
+
+        <!-- City -->
+        <div class="filter-group">
+          <h2>Місто:</h2>
+          <input list="cities" name="city" placeholder="Оберіть місто…">
+            <datalist id="cities">
+            <option>Київ</option>
+            <option>Львів</option>
+            <option>Одеса</option>
+            <option>Дніпро</option>
+            <option>Харків</option>
+            <option>Суми</option>
+            <option>Полтава</option>
+            <option>Чернігів</option>
+          </datalist>
+        </div>
+
+        <!-- Price -->
+        <div class="filter-group">
+          <h2>Ціна:</h2>
+          <div class="price-range">
+            <input type="number" name="price_from" placeholder="Від" min="0">
+            <input type="number" name="price_to"   placeholder="До" min="0">
+          </div>
+        </div>
+
+        <!-- Checkbox -->
+        <div class="filter-group">
+          <label>
+            <input type="checkbox" name="military">
+            Військова кафедра
+          </label>
+        </div>
+      </form>
+    </aside>
+
+    <main>
+      <h1>Оберіть що шукати, а ми допоможемо</h1>
+      <img src="images/waitcard.png" alt="Ілюстрація вступника">
+    </main>
+  </div>
+
+{% endblock %}

@@ -1,0 +1,211 @@
+body {
+    font-family: 'Anonymous Pro', monospace;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+    color: black;
+}
+.page-container {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 0 2vw;
+}
+
+.mobile-header {
+    display: none;
+}
+
+header {
+    background: black;
+    padding: 10px 0;
+    text-align: center;
+    display: block;
+    color: white;
+    font-family: 'Anonymous Pro', monospace;
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    max-width: 1700px;
+    margin: 0 auto;
+}
+
+.site-logo img {
+    height: 60px;
+    width: auto;
+    display: block;
+}
+
+header nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 150px;
+    margin: 0;
+    padding: 40px 0;
+}
+
+header nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: clamp(16px, 1.5vw, 24px);
+}
+
+header nav ul li a.active {
+    border-bottom: 2px solid white;
+}
+
+.footer {
+    background-color: black;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 2vw;
+    gap: 2vw;
+    font-size: clamp(14px, 1.2vw, 18px);
+}
+
+.footer-column {
+    flex: 1;
+    min-width: 200px;  /* щоб не зменшувались надто сильно */
+}
+
+.footer a {
+    color: white;
+    text-decoration: none;
+    margin-right: 1vw;
+    font-size: clamp(14px, 1.2vw, 20px);
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+.social-icon {
+    width: 2vw;
+    height: auto;
+    margin-right: 0.5vw;
+}
+.social-icon:hover {
+    transform: scale(1.2) rotate(5deg);
+    filter: brightness(1.4);
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+    header:not(.mobile-header) {
+        display: none !important;
+    }
+
+    .mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: black;
+        padding: 10px 20px;
+        position: relative;
+    }
+
+    .mobile-header .logo {
+        height: 40px;
+    }
+
+    .menu-icon {
+        font-size: 30px;
+        color: white;
+        cursor: pointer;
+    }
+
+    #menu-toggle {
+        display: none;
+    }
+
+    .mobile-menu {
+        display: none;
+        flex-direction: column;
+        background-color: black;
+        position: absolute;
+        top: 60px;
+        right: 20px;
+        border-radius: 8px;
+        padding: 10px;
+        z-index: 10;
+    }
+
+    .mobile-menu a {
+        color: white;
+        text-decoration: none;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    #menu-toggle:checked + .menu-icon + .mobile-menu {
+        display: flex;
+    }
+
+
+
+
+    .footer {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+        gap: 10px;
+        font-size: 14px;
+    }
+
+    .footer-column {
+        width: 100%;
+    }
+
+    .footer-column img.social-icon {
+        height: 20px;
+        margin-right: 10px;
+    }
+}
+
+@media (min-width: 600px) and (max-width: 1024px) and (orientation: portrait) {
+    header nav ul {
+        display: flex;
+        justify-content: space-between;
+        gap: 1vw;
+        padding: 10px 15px;
+        flex-wrap: nowrap; /* Force single row */
+    }
+
+    header nav ul li {
+        flex: 0 1 auto;
+        white-space: nowrap; /* Prevent line breaks in items */
+    }
+
+    header nav ul li a {
+        font-size: clamp(12px, 2.5vw, 16px); /* Smaller size */
+        padding: 5px;
+    }
+}
+
+
+@media (min-width: 601px) and (max-width: 992px) and (orientation: landscape) {
+    nav ul {
+        display: flex;
+        justify-content: flex-start;
+        gap: 3vw;
+        flex-wrap: wrap;
+    }
+
+    nav ul li a {
+        font-size: clamp(14px, 3vw, 18px);
+    }
+    .footer {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2vw;
+    }
+
+    .footer a, .footer div {
+        font-size: clamp(14px, 2.5vw, 18px);
+    }
+}

@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+{% block page_name %}profile{% endblock %}
+{% block stylesheets %}
+  <link rel="stylesheet" href="{{ asset('css/profile.css') }}">
+{% endblock %}
+{% block content %}
+
+  <div class="profile-container">
+
+      <div class="profile-header">
+        <div class="pill profile-label">ПІБ:</div>
+        <div class="pill profile-value">Кизь Людмила Леонідівна</div>
+
+        <img class="profile-avatar" src="images/profile.jpg" alt="Аватар Людмили">
+      </div>
+        <div class="profile-header">
+                <div class="pill profile-label">Номер:</div>
+                <div class="pill profile-value">+380970675123</div>
+        </div>
+
+      <div class="profile-header">
+        <div class="pill profile-label">Пошта:</div>
+        <div class="pill profile-value">liuda.kiz@gmail.com</div>
+      </div>
+
+      <!-- Scores Grid -->
+      <ul class="scores-list">
+        <li class="score-item pill">
+          <span>Українська мова</span>
+          <span>188</span>
+        </li>
+        <li class="score-item pill">
+          <span>Математика</span>
+          <span>169</span>
+        </li>
+        <li class="score-item pill">
+          <span>Англійська мова</span>
+          <span>164</span>
+        </li>
+        <li class="score-item pill">
+          <span>Фізика</span>
+          <span>163</span>
+        </li>
+      </ul>
+
+      <!-- Interests -->
+      <div class="interests-row">
+        <div class="pill profile-label">Інтереси:</div>
+        <span class="interest-pill">+музика</span>
+        <span class="interest-pill">+дизайн</span>
+        <span class="interest-pill">+мови</span>
+        <span class="interest-pill">+програмування</span>
+      </div>
+
+      <!-- Edit Button -->
+      <a href="#" class="edit-profile">Редагувати профіль</a>
+
+      <!-- About Me -->
+      <div class="about-block">
+        <label class="about-block__label" for="about">Про мене:</label>
+        <textarea id="about" class="about-block__textarea" placeholder="Напишіть кілька слів про себе…"></textarea>
+      </div>
+
+    </div>
+
+
+
+{% endblock %}

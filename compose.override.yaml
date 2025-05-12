@@ -21,6 +21,21 @@ services:
       # Ensure that host.docker.internal is correctly defined on Linux
       - host.docker.internal:host-gateway
     tty: true
+    depends_on:
+      - database
+  
+  database:
+    ports:
+      - "5432:5432"
 
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9090:8080
+
+###> doctrine/doctrine-bundle ###
+
+###< doctrine/doctrine-bundle ###
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
