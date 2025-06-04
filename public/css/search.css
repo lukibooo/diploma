@@ -220,4 +220,28 @@ main img {
     padding: 4px 0;
     font-size: 0.95rem;
 }
+.autocomplete-list {
+    border: 1px solid #ccc;
+    max-height: 200px;
+    overflow-y: auto;
+    position: absolute;
+    background: white;
+    z-index: 10;
+    width: 100%;
+    top: 100%;
+}
+
+.autocomplete-item {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.autocomplete-item:hover {
+    background-color: #f0f0f0;
+}
+
+.autocomplete-wrapper {
+    position: relative;
+}
+
 
