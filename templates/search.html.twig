@@ -29,23 +29,37 @@
                     {% endfor %}
                 </div>
             </div>
-            <div class="subject-row">
-              <select name="subject2">
-                <option value="" disabled selected>Предмет №2</option>
-                <option>Українська мова</option>
-                <option>Математика</option>
-                <option>Історія України</option>
-                <option>Англійська мова</option>
-                <option>Німецька мова</option>
-                <option>Французька мова</option>
-                <option>Іспанська мова</option>
-                <option>Українська література</option>
-                <option>Хімія</option>
-                <option>Біологія</option>
-                <option>Географія</option>
-                <option>Фізика</option>
-              </select>
-              <input type="number" name="score2" placeholder="Бал" min="0" max="200">
+
+            <div class="filter-group">
+                <h2>Місто:</h2>
+                <div class="autocomplete-wrapper">
+                    <input type="text" name="city" id="city-input" placeholder="Оберіть місто…" autocomplete="off">
+                    <div class="autocomplete-list" id="city-list"></div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h2>Спеціальність:</h2>
+                <div class="autocomplete-wrapper">
+                    <input type="text" name="specialty" id="specialty-input" placeholder="Оберіть спеціальність…"
+                           autocomplete="off">
+                    <div class="autocomplete-list" id="specialty-list"></div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h2>Ціна:</h2>
+                <div class="price-range">
+                    <input type="number" name="price_from" placeholder="Від" min="0">
+                    <input type="number" name="price_to" placeholder="До" min="0">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>
+                    <input type="checkbox" name="military">
+                    Військова кафедра
+                </label>
             </div>
             <div class="subject-row">
               <select name="subject3">
