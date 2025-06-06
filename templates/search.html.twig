@@ -135,10 +135,83 @@
       </form>
     </aside>
 
-    <main>
-      <h1>Оберіть що шукати, а ми допоможемо</h1>
-      <img src="images/waitcard.png" alt="Ілюстрація вступника">
-    </main>
-  </div>
 
+    <script>
+        function setupAutocomplete(inputId, listId, url) {
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+
+            input.addEventListener('input', function () {
+                const query = this.value;
+                if (query.length < 2) {
+                    list.innerHTML = '';
+                    return;
+                }
+
+                fetch(url + '?q=' + encodeURIComponent(query))
+                    .then(res => res.json())
+                    .then(data => {
+                        list.innerHTML = '';
+                        data.forEach(item => {
+                            const div = document.createElement('div');
+                            div.textContent = item;
+                            div.classList.add('autocomplete-item');
+                            div.onclick = () => {
+                                input.value = item;
+                                list.innerHTML = '';
+                            };
+                            list.appendChild(div);
+                        });
+                    });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!list.contains(e.target) && e.target !== input) {
+                    list.innerHTML = '';
+                }
+            });
+        }
+
+        setupAutocomplete('city-input', 'city-list', '{{ path('autocomplete_cities') }}');
+        setupAutocomplete('specialty-input', 'specialty-list', '{{ path('autocomplete_specialties') }}');
+    </script>
+    <div class="university-results">
+        {% if universities is not null %}
+            {% if universities is not empty %}
+                {% for university in universities %}
+                    <div class="university-card">
+                        <div class="university-header">
+                            <h2 class="univ-name">{{ university.name }}</h2>
+                            <span class="star-icon">⭐</span>
+                        </div>
+
+                        <div class="university-info">
+                            <p><strong>Опис</strong><br>{{ university.description|slice(0, 300) ~ '...' }}</p>
+                            <em><a href="#">Детальніше про університет</a></em>
+                        </div>
+
+                        {% for specialty in university.specialties %}
+                            <div class="university-data">
+                                <div class="edu-level">{{ specialty.code }} – {{ specialty.name }}</div>
+                                <div class="price">{{ specialty.price }} грн/рік</div>
+
+                                {% for number in specialty.numbers %}
+                                    <div class="subject-line">
+                                        <span>{{ number.subject.name }}</span>
+                                        <span>{{ number.value }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-results-block">
+                    <img src="/images/no_results.png" alt="Результатів не знайдено" class="no-results-img">
+                    <p class="no-results-text">На жаль, ми не знайшли жодного результату за вашими фільтрами.<br>Спробуйте змінити умови пошуку.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
