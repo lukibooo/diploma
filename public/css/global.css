@@ -2,10 +2,22 @@ body {
     font-family: 'Anonymous Pro', monospace;
     margin: 0;
     padding: 0;
-    background-color: #f8f8f8;
-    color: black;
+    background-color: #f8fcff;
+    background-image: radial-gradient(#dbefff 0.8px, transparent 0.8px);
+    background-size: 22px 22px;
+    /*background: linear-gradient(135deg, #f8fcff, #d8ecff);*/
 }
+.container {
+    animation: fadeIn 1s ease;
+}
+
+@keyframes fadeIn {
+    0% {opacity: 0; transform: translateY(20px);}
+    100% {opacity: 1; transform: translateY(0);}
+}
+
 .page-container {
+    /*display: flex;*/
     max-width: 1500px;
     margin: 0 auto;
     padding: 0 2vw;
@@ -26,36 +38,68 @@ header {
 
 .header-inner {
     display: flex;
-    align-items: center;
     justify-content: space-evenly;
-    max-width: 1700px;
+    align-items: center;
+    padding: 0 2rem;
+    font-size: clamp(16px, 1.5vw, 24px);
+    max-width: 1300px;
     margin: 0 auto;
 }
 
 .site-logo img {
-    height: 60px;
-    width: auto;
-    display: block;
+    width: clamp(40px, 6vw, 70px);
+    height: auto;
+}
+/*header nav ul li a {*/
+/*    color: white;*/
+/*    text-decoration: none;*/
+/*    font-size: clamp(16px, 1.5vw, 24px);*/
+/*}*/
+
+/*header nav ul li a.active {*/
+/*    border-bottom: 2px solid white;*/
+/*}*/
+
+.nav {
+    flex-grow: 1;
 }
 
-header nav ul {
-    list-style: none;
+.nav-list {
     display: flex;
     justify-content: center;
-    gap: 150px;
+    align-items: flex-end;
+    gap: 5.3rem;
+    position: relative;
+    list-style: none;
     margin: 0;
-    padding: 40px 0;
+    padding: 0;
 }
 
-header nav ul li a {
+.nav-list li a {
     color: white;
     text-decoration: none;
-    font-size: clamp(16px, 1.5vw, 24px);
+    position: relative;
+    padding: 6px 0;
+    font-family: 'Anonymous Pro', monospace;
+    transition: color 0.3s;
 }
 
-header nav ul li a.active {
-    border-bottom: 2px solid white;
+.nav-list li a:hover {
+    color: #37b598;
 }
+
+.nav-underline {
+    position: absolute;
+    bottom: 0;
+    height: 2px;
+    background-color: white;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    width: 0;
+    left: 0;
+}
+
+
 
 .footer {
     background-color: black;
@@ -105,6 +149,19 @@ header nav ul li a.active {
         background-color: black;
         padding: 10px 20px;
         position: relative;
+    }
+    .mobile-page-title {
+        flex-grow: 1;
+        text-align: center;
+        font-size: 1rem;
+        font-weight: bold;
+        color: white;
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
+        width: max-content;
+        z-index: 1;
     }
 
     .mobile-header .logo {
@@ -209,3 +266,29 @@ header nav ul li a.active {
         font-size: clamp(14px, 2.5vw, 18px);
     }
 }
+@media (max-width: 700px) {
+    header {
+        padding: 8px 12px;
+    }
+
+    .header-inner {
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .site-logo img {
+        height: 40px;
+    }
+
+    header nav ul {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 0;
+    }
+
+    header nav ul li a {
+        font-size: 16px;
+    }
+}
+

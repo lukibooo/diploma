@@ -1,12 +1,10 @@
-/* auth.css — спільні стилі для обох форм */
-
 .auth-container {
-    max-width: 400px;
+    max-width: 500px;
     margin: 60px auto;
-    padding: 30px 20px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 30px;
+    /*background: #fff;*/
+    /*border-radius: 12px;*/
+    /*box-shadow: 0 4px 12px rgba(0,0,0,0.1);*/
     text-align: center;
     font-family: 'Anonymous Pro', monospace;
 }
@@ -19,13 +17,15 @@
 
 .auth-input {
     width: 100%;
-    padding: 12px 16px;
+    padding: 12px 8px;
     margin-bottom: 16px;
     border: none;
     border-radius: 24px;
     background: #f0f0f0;
     font-size: 16px;
     outline: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .auth-btn {
@@ -69,14 +69,14 @@
     margin-bottom: 16px;
 }
 .social-login a img {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     cursor: pointer;
     transition: transform .2s, filter .2s;
 }
 .social-login a img:hover {
-    transform: scale(1.1);
-    filter: brightness(1.2);
+    filter: brightness(0.5) saturate(0%);
+    transform: scale(1.2);
 }
 
 .auth-footer {

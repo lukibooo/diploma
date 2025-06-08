@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}show.news{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/show.news.css') }}">
+{% endblock %}
+
+{% block content %}
+    <section class="news-detail">
+        <div class="news-detail-container">
+            <a href="{{ backUrl }}">← Назад</a>
+            <img src="{{ asset('images/news/' ~ imageName) }}" alt="Зображення новини">
+            <div class="news-detail-content">
+                <h1>{{ news.title }}</h1>
+                <p class="news-detail-date">{{ news.publishedAt }}</p>
+                <p class="news-detail-text">{{ news.content }}</p>
+            </div>
+        </div>
+    </section>
+{% endblock %}

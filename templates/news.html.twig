@@ -1,72 +1,31 @@
 {% extends 'base.html.twig' %}
 
 {% block page_name %}news{% endblock %}
+
 {% block stylesheets %}
-  <link rel="stylesheet" href="{{ asset('css/news.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/news.css') }}">
 {% endblock %}
+
 {% block content %}
 
-<section class="content">
-    <article class="news-card">
-      <div class="card-image">
-        <img src="images/img1.jpg" alt="Новина">
-      </div>
-      <div class="card-content">
-        <h2>Реєстрація на ЄВІ та ЄФВВ для вступу на магістратуру</h2>
-        <p>У 2025 році вступ для здобуття ступеня магістра передбачає складання єдиного вступного іспиту (ЄВІ) або єдиного фахового вступного випробування (ЄФВВ). Для вступу на всі спеціальності…</p>
-        <span>30.05.2025</span>
-      </div>
-    </article>
+    <section class="content">
+        {% set imageNames = [
+            'news1.jpg', 'news2.jpg', 'news3.jpg', 'news4.jpg',
+            'news5.jpg', 'news6.jpg', 'news7.jpg', 'news8.jpg',
+            'img1.jpg', 'img2.png'
+        ]|shuffle %}
+        {% for news in newsList %}
+            <article class="news-card" onclick="location.href='{{ path('show.news', { id: news.id }) }}'" style="cursor: pointer;">
+                <div class="card-image">
+                    <img src="{{ asset('images/news/' ~ imageNames[loop.index0]) }}" alt="Зображення новини">
+                </div>
+                <div class="card-content">
+                    <h2>{{ news.title }}</h2>
+                    <p>{{ news.content[:200] ~ '...' }}</p>
+                    <span>{{ news.publishedAt }}</span>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
 
-    <article class="news-card">
-      <div class="card-image">
-        <img src="images/img1.jpg" alt="Новина">
-      </div>
-      <div class="card-content">
-        <h2>Тренувальні варіанти для ЗНО/НМТ</h2>
-        <p>Сайт ЗНО-ОНЛАЙН пропонує майбутнім учасникам національного мультипредметного тесту 2025 року тренувальні варіанти тестів для підготовки…</p>
-        <span>30.05.2025</span>
-      </div>
-    </article>
-    <article class="news-card">
-          <div class="card-image">
-            <img src="images/img1.jpg" alt="Новина">
-          </div>
-          <div class="card-content">
-            <h2>Тренувальні варіанти для ЗНО/НМТ</h2>
-            <p>Сайт ЗНО-ОНЛАЙН пропонує майбутнім учасникам національного мультипредметного тесту 2025 року тренувальні варіанти тестів для підготовки…</p>
-            <span>30.05.2025</span>
-          </div>
-      </article>
-      <article class="news-card">
-            <div class="card-image">
-              <img src="images/img1.jpg" alt="Новина">
-            </div>
-            <div class="card-content">
-              <h2>Тренувальні варіанти для ЗНО/НМТ</h2>
-              <p>Сайт ЗНО-ОНЛАЙН пропонує майбутнім учасникам національного мультипредметного тесту 2025 року тренувальні варіанти тестів для підготовки…</p>
-              <span>30.05.2025</span>
-            </div>
-      </article>
-        <article class="news-card">
-          <div class="card-image">
-            <img src="images/img1.jpg" alt="Новина">
-          </div>
-          <div class="card-content">
-            <h2>Тренувальні варіанти для ЗНО/НМТ</h2>
-            <p>Сайт ЗНО-ОНЛАЙН пропонує майбутнім учасникам національного мультипредметного тесту 2025 року тренувальні варіанти тестів для підготовки…</p>
-            <span>30.05.2025</span>
-          </div>
-        </article>
-        <article class="news-card">
-            <div class="card-image">
-              <img src="images/img1.jpg" alt="Новина">
-            </div>
-            <div class="card-content">
-              <h2>Тренувальні варіанти для ЗНО/НМТ</h2>
-              <p>Сайт ЗНО-ОНЛАЙН пропонує майбутнім учасникам національного мультипредметного тесту 2025 року тренувальні варіанти тестів для підготовки…</p>
-              <span>30.05.2025</span>
-            </div>
-        </article>
-</section>
 {% endblock %}

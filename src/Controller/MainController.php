@@ -1,59 +1,279 @@
 <?php
+
 namespace App\Controller;
 
+use App\Entity\City;
+use App\Entity\Interest;
+use App\Entity\News;
+use App\Entity\Specialties;
+use App\Entity\Subject;
+use App\Entity\University;
+use App\Service\AuthService;
+use App\Service\FilterService;
+use App\Service\ProfileService;
+use App\Service\RandomNewsService;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class MainController extends AbstractController
 {
-    #[Route('/main', name: 'main')]
-    public function main(): Response
+    #[Route('/')]
+    public function index(): Response
     {
-        $number = random_int(0, 100);
+        return $this->redirectToRoute('main');
+    }
+
+    #[Route('/main', name: 'main')]
+    public function main(AuthService $authService, SessionInterface $session, RandomNewsService $randomNewsService): Response
+    {
+        $currentUser = $authService->getCurrentUser($session);
+        $newsList = $randomNewsService->getRandomNews(4);
 
         return $this->render('main.html.twig', [
-
+            'currentUser' => $currentUser,
+            'newsList' => $newsList,
         ]);
     }
-
+    #[Route('/news/{id}', name: 'show.news')]
+    public function show(News $news, Request $request): Response
+    {
+        $imageOptions = ['img1.jpg', 'img2.png', 'img3.jpg', 'img4.png'];
+        $imageName = $imageOptions[array_rand($imageOptions)];
+        $referer = $request->headers->get('referer');
+        return $this->render('show.news.html.twig', [
+            'news' => $news,
+            'imageName' => $imageName,
+            'backUrl' => $referer ?? $this->generateUrl('main'),
+        ]);
+    }
     #[Route('/about', name: 'about')]
-    public function about(): Response
+    public function about(AuthService $authService, SessionInterface $session): Response
     {
-        $number = random_int(0, 100);
 
+        $currentUser = $authService->getCurrentUser($session);
         return $this->render('about.html.twig', [
-
+            'currentUser' => $currentUser,
         ]);
     }
 
-    #[Route('/search', name: 'search')]
-    public function search(): Response
+    #[Route('/search', name: 'search', methods: ['GET', 'POST'])]
+    public function search(Request $request, FilterService $filterService, EntityManagerInterface $entityManager, AuthService $authService, SessionInterface $session): Response
     {
-        $number = random_int(0, 100);
+        $subjects = $entityManager->getRepository(Subject::class)->findAll();
+        $subjects = array_map(fn(Subject $subject) => $subject->getName(), $subjects);
+        $cities = $entityManager->getRepository(City::class)->findAll();
+        $cities = array_map(fn(City $city) => $city->getName(), $cities);
+        $specialties = $entityManager->getRepository(Specialties::class)->findAll();
+        $specialties = array_map(fn(Specialties $specialties) => $specialties->getName(), $specialties);
+        $city = $request->get('city') ?: null;
+        $specialtyName = $request->get('specialty') ?: null;
+        $priceFrom = $request->get('price_from') ? (int) $request->get('price_from') : null;
+        $priceTo = $request->get('price_to') ? (int) $request->get('price_to') : null;
+        $military = $request->request->filter('military', false, FILTER_VALIDATE_BOOLEAN);
 
+        $selectedSubjects = [];
+        $userSubjects = [];
+
+        for ($i = 1; $i <= 4; $i++) {
+            $subject = $request->request->get("subject$i");
+            $score = $request->request->get("score$i");
+
+            if ($subject && $score) {
+                $selectedSubjects[] = $subject;
+                $userSubjects[] = [
+                    'subject' => $subject,
+                    'score' => (float) $score,
+                ];
+            }
+        }
+
+        $universities = null;
+
+        if ($request->isMethod('POST') && !empty($userSubjects)) {
+
+            $universities = $filterService->getFilteredResults(
+                $userSubjects,
+                $city,
+                $specialtyName,
+                $priceFrom,
+                $priceTo,
+                $military
+            );
+        }
+        $currentUser = $authService->getCurrentUser($session);
         return $this->render('search.html.twig', [
-
+            'universities' => $universities,
+            'subjects' => $subjects,
+            'cities' => $cities,
+            'specialties' => $specialties,
+            'selectedSubjects' => $selectedSubjects,
+            'userSubjects' => $userSubjects,
+            'selectedCity' => $city,
+            'selectedSpecialty' => $specialtyName,
+            'priceFrom' => $priceFrom,
+            'priceTo' => $priceTo,
+            'military' => $military,
+            'filtersApplied' => $request->isMethod('POST'),
+            'currentUser' => $currentUser,
         ]);
+    }
+    #[Route('/university/{id}', name: 'university_detail')]
+    public function universityDetail(University $university, Request $request): Response {
+
+        $selectedSpecialtyId = $request->query->get('specialty');
+        $specialties = $university->getSpecialties();
+        $subjectString = $request->query->get('subjects', '');
+        $subjectNames = $subjectString ? explode(',', $subjectString) : [];
+
+        $selectedSpecialty = null;
+        $otherSpecialties = [];
+        $scoresRaw = $request->query->get('scores', '');
+        $userScores = [];
+
+        foreach (explode(',', $scoresRaw) as $entry) {
+            if (str_contains($entry, ':')) {
+                [$subject, $score] = explode(':', $entry);
+                $userScores[trim(mb_strtolower($subject))] = (int) $score;
+            }
+        }
+        foreach ($specialties as $specialty) {
+            if ($specialty->getId() == $selectedSpecialtyId) {
+                $selectedSpecialty = $specialty;
+            } else {
+                $otherSpecialties[] = $specialty;
+            }
+        }
+        $backUrl = $this->generateUrl('search', array_filter($request->query->all(), fn($key) => !in_array($key, ['id', 'specialty']), ARRAY_FILTER_USE_KEY));
+        return $this->render('university_detail.html.twig', [
+            'university' => $university,
+            'selectedSpecialty' => $selectedSpecialty,
+            'otherSpecialties' => $otherSpecialties,
+            'userSubjects' => $subjectNames,
+            'userScores' => $userScores,
+            'backUrl' => $backUrl
+        ]);
+    }
+    #[Route('/login', name: 'app_login')]
+    public function login(AuthenticationUtils $authenticationUtils): Response
+    {
+        return $this->render('security/auth.html.twig', [
+            'last_username' => $authenticationUtils->getLastUsername(),
+            'error' => $authenticationUtils->getLastAuthenticationError(),
+        ]);
+    }
+
+    #[Route('/logout', name: 'app_logout')]
+    public function logout(): void
+    {
+        // Symfony обробляє logout автоматично — тут нічого не потрібно
+    }
+
+    #[Route('/register', name: 'register')]
+    public function register(): Response
+    {
+        return $this->render('registr.html.twig');
     }
 
     #[Route('/profile', name: 'profile')]
-    public function profile(): Response
+    public function profile(Security $security): Response
     {
-        $number = random_int(0, 100);
+        $user = $security->getUser();
 
         return $this->render('profile.html.twig', [
-
+            'user' => $user,
+        ]);
+    }
+    #[Route('/profile/update', name: 'profile_update', methods: ['POST'])]
+    public function update(Request $request, ProfileService $profileService): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $profileService->updateProfile($request);
+        return $this->redirectToRoute('profile');
+    }
+    #[Route('/news', name: 'news')]
+    public function news(AuthService $authService, SessionInterface $session, RandomNewsService $randomNewsService): Response
+    {
+        $currentUser = $authService->getCurrentUser($session);
+        $newsList = $randomNewsService->getRandomNews(6);
+        return $this->render('news.html.twig', [
+            'currentUser' => $currentUser,
+            'newsList' => $newsList
         ]);
     }
 
-    #[Route('/news', name: 'news')]
-    public function news(): Response
+    #[Route('/autocomplete/cities', name: 'autocomplete_cities')]
+    public function autocompleteCities(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $number = random_int(0, 100);
+        $query = $request->query->get('q');
+        $results = $em->getRepository(City::class)
+            ->createQueryBuilder('c')
+            ->where('LOWER(c.name) LIKE :q')
+            ->setParameter('q', mb_strtolower($query) . '%')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
 
-        return $this->render('news.html.twig', [
+        $names = array_map(fn(City $city) => $city->getName(), $results);
+        return $this->json($names);
+    }
 
-        ]);
+    #[Route('/autocomplete/specialties', name: 'autocomplete_specialties')]
+    public function autocompleteSpecialties(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $query = $request->query->get('q');
+        $results = $em->createQueryBuilder()
+            ->select('DISTINCT s.name')
+            ->from(Specialties::class, 's')
+            ->where('LOWER(s.name) LIKE :q')
+            ->setParameter('q', mb_strtolower($query) . '%')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getScalarResult();
+
+        $names = array_column($results, 'name');
+
+        return $this->json($names);
+    }
+    #[Route('/subjects/autocomplete', name: 'subject_autocomplete')]
+    public function autocompleteSubject(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $query = $request->query->get('q');
+        $results = $em->createQueryBuilder('s')
+            ->select('DISTINCT s.name')
+            ->from(Subject::class, 's')
+            ->where('LOWER(s.name) LIKE :q')
+            ->setParameter('q', mb_strtolower($query) . '%')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getScalarResult();
+
+        $names = array_column($results, 'name');
+
+        return $this->json($names);
+    }
+    #[Route('/interests/autocomplete', name: 'interests_autocomplete')]
+    public function autocompleteInterest(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $query = $request->query->get('q');
+        $results = $em->createQueryBuilder('s')
+            ->select('DISTINCT s.name')
+            ->from(Interest::class, 's')
+            ->where('LOWER(s.name) LIKE :q')
+            ->setParameter('q', mb_strtolower($query) . '%')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getScalarResult();
+
+        $names = array_column($results, 'name');
+
+        return $this->json($names);
     }
 }

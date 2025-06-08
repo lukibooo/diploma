@@ -1,68 +1,95 @@
 {% extends 'base.html.twig' %}
 {% block page_name %}profile{% endblock %}
 {% block stylesheets %}
-  <link rel="stylesheet" href="{{ asset('css/profile.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">
 {% endblock %}
 {% block content %}
+    <div class="profile-container">
+        <h2>Привіт!</h2>
 
-  <div class="profile-container">
-
-      <div class="profile-header">
-        <div class="pill profile-label">ПІБ:</div>
-        <div class="pill profile-value">Кизь Людмила Леонідівна</div>
-
-        <img class="profile-avatar" src="images/profile.jpg" alt="Аватар Людмили">
-      </div>
-        <div class="profile-header">
-                <div class="pill profile-label">Номер:</div>
-                <div class="pill profile-value">+380970675123</div>
+        <div class="profile-info-row">
+            <div class="profile-fields">
+                <div class="profile-field">
+                    <div class="pill profile-label">Пошта:</div>
+                    <div class="pill profile-value">{{ user.email }}</div>
+                </div>
+            </div>
         </div>
 
-      <div class="profile-header">
-        <div class="pill profile-label">Пошта:</div>
-        <div class="pill profile-value">liuda.kiz@gmail.com</div>
-      </div>
-
-      <!-- Scores Grid -->
-      <ul class="scores-list">
-        <li class="score-item pill">
-          <span>Українська мова</span>
-          <span>188</span>
-        </li>
-        <li class="score-item pill">
-          <span>Математика</span>
-          <span>169</span>
-        </li>
-        <li class="score-item pill">
-          <span>Англійська мова</span>
-          <span>164</span>
-        </li>
-        <li class="score-item pill">
-          <span>Фізика</span>
-          <span>163</span>
-        </li>
-      </ul>
-
-      <!-- Interests -->
-      <div class="interests-row">
-        <div class="pill profile-label">Інтереси:</div>
-        <span class="interest-pill">+музика</span>
-        <span class="interest-pill">+дизайн</span>
-        <span class="interest-pill">+мови</span>
-        <span class="interest-pill">+програмування</span>
-      </div>
-
-      <!-- Edit Button -->
-      <a href="#" class="edit-profile">Редагувати профіль</a>
-
-      <!-- About Me -->
-      <div class="about-block">
-        <label class="about-block__label" for="about">Про мене:</label>
-        <textarea id="about" class="about-block__textarea" placeholder="Напишіть кілька слів про себе…"></textarea>
-      </div>
-
+        <div class="about-block">
+            <a href="{{ path('app_logout') }}" class="auth-btn" style="background-color: #f0f0f0; color: #333;">Вийти</a>
+        </div>
     </div>
-
-
-
 {% endblock %}
+
+
+
+
+{#{% extends 'base.html.twig' %}#}
+{#{% block page_name %}profile{% endblock %}#}
+{#{% block stylesheets %}#}
+{#    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">#}
+{#{% endblock %}#}
+{#{% block content %}#}
+
+{#    <div class="profile-container">#}
+
+{#        <div class="profile-info-row">#}
+{#            <div class="profile-fields">#}
+{#                <div class="profile-field">#}
+{#                    <div class="pill profile-label">ПІБ:</div>#}
+{#                    <div class="pill profile-value">Кизь Людмила Леонідівна</div>#}
+{#                </div>#}
+{#                <div class="profile-field">#}
+{#                    <div class="pill profile-label">Номер:</div>#}
+{#                    <div class="pill profile-value">+380970675123</div>#}
+{#                </div>#}
+{#                <div class="profile-field">#}
+{#                    <div class="pill profile-label">Пошта:</div>#}
+{#                    <div class="pill profile-value">liuda.kiz@gmail.com</div>#}
+{#                </div>#}
+{#            </div>#}
+{#            <div class="profile-avatar-wrapper">#}
+{#                <img class="profile-avatar" src="images/profile.jpg" alt="Аватар Людмили">#}
+{#                <a href="#" class="edit-profile">Редагувати профіль</a>#}
+{#            </div>#}
+{#        </div>#}
+
+
+{#        <ul class="scores-list">#}
+{#            <li class="score-item pill">#}
+{#                <span>Українська мова</span>#}
+{#                <span>188</span>#}
+{#            </li>#}
+{#            <li class="score-item pill">#}
+{#                <span>Математика</span>#}
+{#                <span>169</span>#}
+{#            </li>#}
+{#            <li class="score-item pill">#}
+{#                <span>Англійська мова</span>#}
+{#                <span>164</span>#}
+{#            </li>#}
+{#            <li class="score-item pill">#}
+{#                <span>Фізика</span>#}
+{#                <span>163</span>#}
+{#            </li>#}
+{#        </ul>#}
+
+
+{#        <div class="interests-row">#}
+{#            <div class="pill profile-label">Інтереси:</div>#}
+{#            <input class="interest-input" type="text" placeholder="Додати інтерес…"/>#}
+{#        </div>#}
+{#        <div class="about-block">#}
+{#            <label class="about-block__label" for="about">Про мене:</label>#}
+{#            <textarea id="about" class="about-block__textarea" placeholder="Напишіть кілька слів про себе…"></textarea>#}
+{#        </div>#}
+{#        <div class="about-block">#}
+{#            <label class="about-block__label" for="about">Збережені університети:</label>#}
+{#        </div>#}
+
+{#    </div>#}
+
+
+
+{#{% endblock %}#}

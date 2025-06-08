@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ university.name }}{% endblock %}
+{% block stylesheets %}
+  <link rel="stylesheet" href="{{ asset('css/university.show.css') }}">
+{% endblock %}
+
+{% block content %}
+    <a href="{{ backUrl }}" class="back-button">← Повернутись до результатів</a>
+<section class="university-detail">
+  <h1>{{ university.name }}</h1>
+
+  <div class="description">{{ university.description }}</div>
+    <p class="city">Місто: {{ university.city.name }}, {{ university.city.region.name }} область</p>
+
+  <div class="highlighted-specialty">
+    <h2>Обрана спеціальність</h2>
+    <p class="spec-title">{{ selectedSpecialty.code }} – {{ selectedSpecialty.name }}</p>
+    <p class="price">Ціна: {{ selectedSpecialty.price }} грн/рік</p>
+
+    <h3>Предмети та коефіцієнти</h3>
+    <ul class="subjects">
+      {% for number in selectedSpecialty.numbers %}
+          <li>
+              {{ number.subject.name }} —  {{ number.value }}
+          </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="other-specialties">
+    <h2>Інші спеціальності</h2>
+    {% for specialty in otherSpecialties %}
+      <div class="spec-card">
+        <p class="spec-title">{{ specialty.code }} – {{ specialty.name }}</p>
+        <p class="price">Ціна: {{ specialty.price }} грн/рік</p>
+      </div>
+    {% endfor %}
+  </div>
+
+
+</section>
+{% endblock %}

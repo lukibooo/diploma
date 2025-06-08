@@ -7,10 +7,11 @@
 {% block content %}
 <div class="auth-container">
     <h2>Увійдіть, будь ласка :)</h2>
-    <form action="/login" method="post">
-      <input type="text" name="username" placeholder="Пошта або номер телефону" class="auth-input" required>
-      <input type="password" name="password" placeholder="Пароль" class="auth-input" required>
-      <button type="submit" class="auth-btn">Увійти</button>
+    <form action="{{ path('app_login') }}" method="post">
+        <input type="text" name="username" placeholder="Пошта" required>
+        <input type="password" name="password" placeholder="Пароль" required>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+        <button type="submit">Увійти</button>
     </form>
 
     <div class="divider">Або</div>
@@ -18,11 +19,11 @@
     <div class="social-login">
       <a href="/oauth/apple"><img src="images/apple.svg" alt="Apple"></a>
       <a href="/oauth/google"><img src="images/google.svg" alt="Google"></a>
-      <a href="/oauth/facebook"><img src="images/facebook.svg" alt="Facebook"></a>
+      <a href="/oauth/facebook"><img src="images/facebook2.svg" alt="Facebook"></a>
     </div>
 
     <div class="auth-footer">
-      Не маєте акаунту? <a href="register.html">Зареєструватися</a>
+      Не маєте акаунту? <a href="{{ path('register') }}">Зареєструватися</a>
     </div>
   </div>
 {% endblock %}
