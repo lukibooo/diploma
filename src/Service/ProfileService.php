@@ -24,11 +24,16 @@ class ProfileService
         $user->setPhone($request->request->get('phone'));
         $user->setAbout($request->request->get('about'));
 
-        $interestsInput = $request->request->get('interests', '');
-        $interests = array_filter(array_map('trim', explode(',', $interestsInput)));
-        $user->clearInterests();
-        foreach ($interests as $interestName) {
-            $user->addInterestByName($interestName);
+
+        $interestIds = $request->request->get('interests', []);
+        if (!is_array($interestIds)) {
+            $interestIds = [];
+        }
+        $interests = $this->em->getRepository(Interest::class)->findBy(['id' => $interestIds]);
+
+        $user->getInterests()->clear();
+        foreach ($interests as $interest) {
+            $user->addInterest($interest);
         }
 
         for ($i = 1; $i <= 4; $i++) {
