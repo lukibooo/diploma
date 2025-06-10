@@ -17,17 +17,24 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            custom_authenticators:
-                - App\Security\LoginAuthenticator
+            form_login:
+                login_path: app_login
+                check_path: app_login
             logout:
                 path: app_logout
-                target: /
+                target: app_login
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800 # 7 днів
+                path: /
+                always_remember_me: true
+            
 
     access_control:
+#        - { path: ^/login, roles: ROLE_ANONYMOUS }
+#        - { path: ^/register, roles: ROLE_ANONYMOUS }
         - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/account/delete, roles: ROLE_USER }
-        - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/register, roles: IS_AUTHENTICATED_ANONYMOUSLY }
 
 
 #security:

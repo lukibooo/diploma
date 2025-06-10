@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class MainController extends AbstractController
@@ -52,6 +53,7 @@ class MainController extends AbstractController
             'news' => $news,
             'imageName' => $imageName,
             'backUrl' => $referer ?? $this->generateUrl('main'),
+            'refSource' => $referer,
         ]);
     }
     #[Route('/about', name: 'about')]
@@ -162,9 +164,15 @@ class MainController extends AbstractController
         ]);
     }
     #[Route('/login', name: 'app_login')]
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils, Request $request): Response
     {
-        return $this->render('security/auth.html.twig', [
+        $session = $request->getSession();
+        $referer = $request->headers->get('referer');
+
+        if ($referer && !str_contains($referer, '/login')) {
+            $session->set('_security.main.target_path', $referer);
+        }
+        return $this->render('auth.html.twig', [
             'last_username' => $authenticationUtils->getLastUsername(),
             'error' => $authenticationUtils->getLastAuthenticationError(),
         ]);
@@ -177,26 +185,105 @@ class MainController extends AbstractController
     }
 
     #[Route('/register', name: 'register')]
-    public function register(): Response
+    public function register(Request $request, AuthService $authService): Response
     {
+        if ($request->isMethod('POST')) {
+            $email = $request->request->get('email');
+            $password = $request->request->get('password');
+
+            if ($email && $password) {
+                $authService->register($email, $password);
+                return $this->redirectToRoute('profile');
+            }
+
+            $this->addFlash('error', 'Email або пароль не передано.');
+        }
+
         return $this->render('registr.html.twig');
     }
 
     #[Route('/profile', name: 'profile')]
-    public function profile(Security $security): Response
+    #[IsGranted('ROLE_USER')]
+    public function profile(Request $request, Security $security, EntityManagerInterface $em, ProfileService $profileService): Response
     {
         $user = $security->getUser();
+        $mustEdit = empty($user->getFullName()) || empty($user->getPhone()) || empty($user->getAbout());
+        $manualEdit = $request->query->get('edit') === '1';
+        $editMode = $mustEdit || $manualEdit;
+        $requestedEdit = $request->query->get('edit');
+        if ($requestedEdit !== null) {
+            $editMode = (bool) $requestedEdit;
+        } else {
+            $editMode = !$profileService->isProfileComplete($user);
+        }
+
+        $allInterests = $em->getRepository(Interest::class)->findAll();
 
         return $this->render('profile.html.twig', [
             'user' => $user,
+            'editMode' => $editMode,
+            'showAlert' => !$profileService->isProfileComplete($user),
+            'allInterests' => $allInterests
         ]);
     }
-    #[Route('/profile/update', name: 'profile_update', methods: ['POST'])]
-    public function update(Request $request, ProfileService $profileService): Response
+
+    #[Route('/profile/save', name: 'profile_save', methods: ['POST'])]
+    public function saveProfile(Request $request, EntityManagerInterface $em, Security $security): Response
     {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-        $profileService->updateProfile($request);
-        return $this->redirectToRoute('profile');
+        /** @var \App\Entity\User $user */
+        $user = $security->getUser();
+
+        $user->setFullName($request->get('full_name'));
+        $user->setPhone($request->get('phone'));
+        $user->setAbout($request->get('about'));
+
+        // Фото
+        $photoFile = $request->files->get('photo');
+        if ($photoFile) {
+            $filename = uniqid() . '.' . $photoFile->guessExtension();
+            $photoFile->move('uploads/photos', $filename);
+            $user->setAvatar('uploads/photos/' . $filename);
+        }
+
+        // Інтереси
+        $interestIds = $request->get('interests', []);
+        $interests = $em->getRepository(Interest::class)->findBy(['id' => $interestIds]);
+
+        $user->getInterests()->clear();
+        foreach ($interests as $interest) {
+            $user->addInterest($interest);
+        }
+
+
+        for ($i = 1; $i <= 4; $i++) {
+        $name = $request->request->get("subject{$i}_name");
+        $score = $request->request->get("subject{$i}_score");
+
+        if ($name && $score) {
+            $setterName = "setSubject{$i}Name";
+            $setterScore = "setSubject{$i}Score";
+
+            $user->$setterName($name);
+            $user->$setterScore((int)$score);
+        }
+    }
+
+
+
+        $em->persist($user);
+        $em->flush();
+
+        return $this->redirectToRoute('profile',  ['edit' => 0]);
+    }
+    #[Route('/account/delete', name: 'delete_account', methods: ['POST'])]
+    public function deleteAccount(EntityManagerInterface $em, Security $security): Response
+    {
+        $user = $security->getUser();
+
+        $em->remove($user);
+        $em->flush();
+
+        return $this->redirectToRoute('register');
     }
     #[Route('/news', name: 'news')]
     public function news(AuthService $authService, SessionInterface $session, RandomNewsService $randomNewsService): Response

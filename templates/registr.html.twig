@@ -1,4 +1,3 @@
-{# templates/registration/registr.html.twig #}
 {% extends 'base.html.twig' %}
 {% block page_name %}registr{% endblock %}
 {% block stylesheets %}
@@ -8,7 +7,7 @@
 <div class="auth-container">
     <h2>Зареєструйтесь, будь ласка :)</h2>
     <form action="{{ path('register') }}" method="post">
-      <input type="text" name="username" placeholder="Пошта" class="auth-input" required>
+      <input type="text" name="email" placeholder="Пошта" class="auth-input" required>
       <input type="password" name="password" placeholder="Пароль" class="auth-input" required>
       <input type="password" name="password_confirm" placeholder="Підтвердження паролю" class="auth-input" required>
       <button type="submit" class="auth-btn">Зареєструватись</button>

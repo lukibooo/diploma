@@ -1,4 +1,3 @@
-{# templates/security/auth.html.twig #}
 {% extends 'base.html.twig' %}
 {% block page_name %}auth{% endblock %}
 {% block stylesheets %}
@@ -8,10 +7,10 @@
 <div class="auth-container">
     <h2>Увійдіть, будь ласка :)</h2>
     <form action="{{ path('app_login') }}" method="post">
-        <input type="text" name="username" placeholder="Пошта" required>
-        <input type="password" name="password" placeholder="Пароль" required>
+        <input type="text" name="_username" placeholder="Пошта" class="auth-input" required>
+        <input type="password" name="_password" placeholder="Пароль" class="auth-input" required>
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-        <button type="submit">Увійти</button>
+        <button type="submit" class="auth-btn">Увійти</button>
     </form>
 
     <div class="divider">Або</div>

@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Security;
-
+use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
@@ -31,11 +32,22 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
             ]
         );
     }
-
-    public function onAuthenticationSuccess(Request $request, $token, string $firewallName): RedirectResponse
+    use TargetPathTrait;
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): RedirectResponse
     {
+        $targetPath = $this->getTargetPath($request->getSession(), $firewallName);
+
+        if ($targetPath) {
+            return new RedirectResponse($targetPath);
+        }
+
         return new RedirectResponse($this->urlGenerator->generate('profile'));
     }
+//    public function onAuthenticationSuccess(Request $request, $token, string $firewallName): RedirectResponse
+//    {
+//        return new RedirectResponse($this->urlGenerator->generate('profile'));
+//
+//    }
 
     protected function getLoginUrl(Request $request): string
     {

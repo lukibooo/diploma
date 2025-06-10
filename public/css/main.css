@@ -1,31 +1,26 @@
 .hero {
-    background: linear-gradient(135deg, #e9fefb, #fffbe6);
+    background: linear-gradient(135deg, #ffffff, #d6fffb, #ffffff);
+    background-size: 200% 200%;
+    animation: gradientShift 5s ease infinite;
     color: black;
     position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    padding: 3vw 4vw;
+    padding: 2vw 4vw;
     border-radius: 2rem;
     max-width: 80vw;
-    margin: 4vw auto;
+    margin: 2vw auto;
     min-height: 280px;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    animation: fadeSlide 0.6s ease-in-out;
 }
 
-.hero::after {
-    content: '';
-    position: absolute;
-    bottom: -30px;
-    left: -10%;
-    width: 120%;
-    height: 60px;
-    background: linear-gradient(135deg, #e9fefb, #fffbe6);
-    opacity: 0.3;
-    z-index: 0;
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .hero-content {
@@ -52,12 +47,12 @@
     display: inline-block;
     position: relative;
     transition: color 0.2s ease;
-    text-decoration: underline;
+    text-decoration: none;
     z-index: 2;
 }
 .hero-content a:hover {
-    color: #003366;
-    text-decoration: none;
+    color: #2f8d77;
+    text-decoration: underline;
 }
 
 .hero-logo img {

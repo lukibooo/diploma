@@ -24,7 +24,7 @@
                     <li><a href="{{ path('about') }}"
                            class="{% if app.request.attributes.get('_route') == 'about' %}active{% endif %}">Про наc</a></li>
                     <li><a href="{{ path('search') }}"
-                           class="{% if app.request.attributes.get('_route') == 'search' %}active{% endif %}">Пошук</a></li>
+                           class="{% if app.request.attributes.get('_route') starts with 'search' or app.request.attributes.get('_route') starts with 'university' %}active{% endif %}">Пошук</a></li>
                     <li><a href="{{ path(currentUser ? 'profile' : 'app_login') }}"
                            class="{% if app.request.attributes.get('_route') == 'profile' %}active{% endif %}">Профіль</a></li>
                     <li><a href="{{ path('news') }}"
@@ -95,30 +95,51 @@
         const underline = document.querySelector('.nav-underline');
         const links = nav.querySelectorAll('a');
 
-        if (!nav || !underline) return;
+        // Зберігаємо шлях попередньої сторінки, якщо це внутрішній перехід
+        if (document.referrer.includes(window.location.hostname)) {
+            sessionStorage.setItem('lastPage', new URL(document.referrer).pathname);
+        }
 
+        const lastPage = sessionStorage.getItem('lastPage') || '';
+        const currentRoute = window.location.pathname;
+
+        // Якщо Twig не активував лінк — визначаємо активний вручну
+        const noActive = !nav.querySelector('a.active');
+        if (noActive) {
+            let linkToActivate = null;
+
+            if (lastPage.includes('/main')) {
+                linkToActivate = Array.from(links).find(link => link.href.includes('/main'));
+            } else if (lastPage.includes('/search')) {
+                linkToActivate = Array.from(links).find(link => link.href.includes('/search'));
+            } else if (lastPage.includes('/news')) {
+                linkToActivate = Array.from(links).find(link => link.href.includes('/news'));
+            } else if (currentRoute.includes('/university')) {
+                linkToActivate = Array.from(links).find(link => link.href.includes('/search'));
+            } else if (currentRoute.includes('/show/news')) {
+                linkToActivate = Array.from(links).find(link => link.href.includes('/news'));
+            }
+
+            if (linkToActivate) {
+                linkToActivate.classList.add('active');
+                moveUnderline(linkToActivate);
+            }
+        }
+
+        // Підкреслення під активним або наведеним пунктом
         function moveUnderline(el) {
-            const rect = el.getBoundingClientRect();
-            const navRect = nav.getBoundingClientRect();
             underline.style.left = `${el.offsetLeft}px`;
             underline.style.width = `${el.offsetWidth}px`;
         }
 
-        // 1. Початкова позиція — активна вкладка
-        const activeLink = nav.querySelector('a.active');
-        if (activeLink) {
-            moveUnderline(activeLink);
-        }
-
-        // 2. Наводимо мишею
         links.forEach(link => {
             link.addEventListener('mouseenter', () => moveUnderline(link));
         });
 
-        // 3. Вихід з меню — повертаємо назад на активний
         nav.addEventListener('mouseleave', () => {
-            if (activeLink) {
-                moveUnderline(activeLink);
+            const active = nav.querySelector('a.active');
+            if (active) {
+                moveUnderline(active);
             } else {
                 underline.style.width = '0';
             }

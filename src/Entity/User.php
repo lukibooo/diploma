@@ -39,12 +39,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     private string $email;
-    #[ORM\Column(type: 'json', nullable: true)]
-    private ?array $subjects = null;
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $subject1Name = null;
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $subject1Score = null;
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $subject2Name = null;
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $subject2Score = null;
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $subject3Name = null;
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $subject3Score = null;
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $subject4Name = null;
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $subject4Score = null;
 
-    /**
-     * @var Collection<int, Interest>
-     */
     #[ORM\ManyToMany(targetEntity: Interest::class, mappedBy: 'users')]
     private Collection $interests;
 
@@ -153,14 +164,94 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
-    public function getSubjects(): ?array
+    public function getSubject1Name(): ?string
     {
-        return $this->subjects;
+        return $this->subject1Name;
     }
 
-    public function setSubjects(?array $subjects): self
+    public function setSubject1Name(?string $subject1Name): self
     {
-        $this->subjects = $subjects;
+        $this->subject1Name = $subject1Name;
+        return $this;
+    }
+
+    public function getSubject1Score(): ?int
+    {
+        return $this->subject1Score;
+    }
+
+    public function setSubject1Score(?int $subject1Score): self
+    {
+        $this->subject1Score = $subject1Score;
+        return $this;
+    }
+
+// Subject 2
+    public function getSubject2Name(): ?string
+    {
+        return $this->subject2Name;
+    }
+
+    public function setSubject2Name(?string $subject2Name): self
+    {
+        $this->subject2Name = $subject2Name;
+        return $this;
+    }
+
+    public function getSubject2Score(): ?int
+    {
+        return $this->subject2Score;
+    }
+
+    public function setSubject2Score(?int $subject2Score): self
+    {
+        $this->subject2Score = $subject2Score;
+        return $this;
+    }
+
+// Subject 3
+    public function getSubject3Name(): ?string
+    {
+        return $this->subject3Name;
+    }
+
+    public function setSubject3Name(?string $subject3Name): self
+    {
+        $this->subject3Name = $subject3Name;
+        return $this;
+    }
+
+    public function getSubject3Score(): ?int
+    {
+        return $this->subject3Score;
+    }
+
+    public function setSubject3Score(?int $subject3Score): self
+    {
+        $this->subject3Score = $subject3Score;
+        return $this;
+    }
+
+// Subject 4
+    public function getSubject4Name(): ?string
+    {
+        return $this->subject4Name;
+    }
+
+    public function setSubject4Name(?string $subject4Name): self
+    {
+        $this->subject4Name = $subject4Name;
+        return $this;
+    }
+
+    public function getSubject4Score(): ?int
+    {
+        return $this->subject4Score;
+    }
+
+    public function setSubject4Score(?int $subject4Score): self
+    {
+        $this->subject4Score = $subject4Score;
         return $this;
     }
 

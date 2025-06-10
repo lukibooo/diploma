@@ -4,23 +4,205 @@
     <link rel="stylesheet" href="{{ asset('css/profile.css') }}">
 {% endblock %}
 {% block content %}
-    <div class="profile-container">
-        <h2>Привіт!</h2>
+<div class="profile-container">
+    {% if showAlert %}
+        <div class="alert-warning">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+            </svg>
+            Заповніть ваш профіль, щоб продовжити користування платформою.
+        </div>
+    {% endif %}
 
+
+    <form action="{{ path('profile_save') }}" method="post" enctype="multipart/form-data">
         <div class="profile-info-row">
             <div class="profile-fields">
+                <div class="profile-field">
+                    <div class="pill profile-label">ПІБ:</div>
+                    <div class="pill profile-value">{{ user.fullName }}</div>
+                </div>
+                <div class="profile-field">
+                    <div class="pill profile-label">Номер:</div>
+                    <div class="pill profile-value">{{ user.phone }}</div>
+                </div>
                 <div class="profile-field">
                     <div class="pill profile-label">Пошта:</div>
                     <div class="pill profile-value">{{ user.email }}</div>
                 </div>
             </div>
+            <div class="profile-avatar-wrapper">
+                <img class="profile-avatar" src="{{ asset(user.photo ?? 'images/profile.jpg') }}" alt="Аватар">
+                <a href="{{ path('profile', { edit: 1 }) }}" class="edit-profile">Редагувати профіль</a>
+            </div>
         </div>
 
-        <div class="about-block">
-            <a href="{{ path('app_logout') }}" class="auth-btn" style="background-color: #f0f0f0; color: #333;">Вийти</a>
+    <div class="about-block">
+        <h3 class="pill profile-label">Предмети</h3>
+        <div class="subjects-wrapper">
+            {% for i in 1..4 %}
+                <div class="subject-block">
+                    {% set nameField = attribute(user, 'subject' ~ i ~ 'Name') %}
+                    {% set scoreField = attribute(user, 'subject' ~ i ~ 'Score') %}
+                    {% if editMode %}
+                        <input type="text" name="subject{{ i }}_name" list="subjects-list" placeholder="Назва предмета" value="{{ nameField ?? '' }}" class="pill" required>
+                        <input type="number" name="subject{{ i }}_score" placeholder="Бал" min="100" max="200" value="{{ scoreField ?? '' }}" class="pill" required>
+                    {% else %}
+                        {% if nameField %}
+                            <div class="pill">{{ nameField }}: {{ scoreField }}</div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <datalist id="subjects-list">
+            <option value="Українська мова">
+            <option value="Математика">
+            <option value="Історія України">
+            <option value="Біологія">
+            <option value="Географія">
+            <option value="Фізика">
+            <option value="Хімія">
+            <option value="Англійська мова">
+            <option value="Німецька мова">
+        </datalist>
+    </div>
+
+    <div class="interests-row">
+        <div class="pill profile-label">Інтереси:</div>
+        <div class="interests-list">
+            {% for interest in allInterests %}
+                <label class="interest-pill">
+                    {% if editMode %}
+                        <input type="checkbox" name="interests[]" value="{{ interest.id }}" {% if interest in user.interests %}checked{% endif %}>
+                    {% endif %}
+                    {{ interest.name }}
+                </label>
+            {% endfor %}
         </div>
     </div>
+
+    <div class="about-block">
+        <label class="pill profile-label" for="about">Про мене:</label>
+        {% if editMode %}
+            <textarea id="about" name="about" class="about-preview">{{ user.about ?? '' }}</textarea>
+        {% else %}
+            <div class="pill profile-value">{{ user.about }}</div>
+        {% endif %}
+    </div>
+<div class="profile-button-row">
+        {% if editMode %}
+            <button type="submit" class="edit-profile">Зберегти</button>
+        {% endif %}
+        <a href="{{ path('app_logout') }}" class="profile-button-row exit-btn">Вийти</a>
+        <form action="{{ path('delete_account') }}" method="post" onsubmit="return confirm('Точно видалити акаунт?');">
+            <button type="submit" class="profile-button-row danger-btn">Видалити акаунт</button>
+        </form>
+</div>
+</form>
+
+
+</div>
 {% endblock %}
+
+
+{#% extends 'base.html.twig' %}#}
+{#{% block page_name %}profile{% endblock %}#}
+{#{% block stylesheets %}#}
+{#    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">#}
+{#{% endblock %}#}
+{#{% block content %}#}
+{#    {% if showAlert %}#}
+{#        <div class="alert alert-warning">#}
+{#            🔔 Заповніть ваш профіль, щоб продовжити користування платформою.#}
+{#        </div>#}
+{#    {% endif %}#}
+{#    <div class="profile-container">#}
+{#        <h2>Привіт, {{ user.email }}</h2>#}
+
+{#        <form action="{{ path('profile_save') }}" method="post" enctype="multipart/form-data">#}
+{#            <div class="profile-info-row">#}
+{#                <div class="profile-fields">#}
+{#                    <div class="profile-field">#}
+{#                        <div class="pill profile-label">ПІБ:</div>#}
+{#                        <input type="text" name="full_name" class="pill profile-value" value="{{ user.fullName ?? '' }}" required>#}
+{#                    </div>#}
+{#                    <div class="profile-field">#}
+{#                        <div class="pill profile-label">Номер:</div>#}
+{#                        <input type="tel" name="phone" class="pill profile-value" value="{{ user.phone ?? '' }}" required>#}
+{#                    </div>#}
+{#                    <div class="profile-field">#}
+{#                        <div class="pill profile-label">Пошта:</div>#}
+{#                        <div class="pill profile-value">{{ user.email }}</div>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="profile-avatar-wrapper">#}
+{#                    <img class="profile-avatar" src="{{ asset(user.photo ?? 'images/profile.jpg') }}" alt="Аватар">#}
+{#                    <input type="file" name="photo">#}
+{#                </div>#}
+{#            </div>#}
+
+{#            <ul class="scores-list">#}
+{#                {% for result in user.subjectResults %}#}
+{#                    <li class="score-item pill">#}
+{#                        <span>{{ result.subject.name }}</span>#}
+{#                        <input type="number" name="scores[{{ result.subject.id }}]" value="{{ result.score }}" min="100" max="200" required>#}
+{#                    </li>#}
+{#                {% endfor %}#}
+{#            </ul>#}
+
+{#            <div class="interests-row">#}
+{#                <div class="pill profile-label">Інтереси:</div>#}
+{#                <div class="interests-list">#}
+{#                    {% for interest in allInterests %}#}
+{#                        <label class="interest-pill">#}
+{#                            <input type="checkbox" name="interests[]" value="{{ interest.id }}" {% if interest in user.interests %}checked{% endif %}>#}
+{#                            {{ interest.name }}#}
+{#                        </label>#}
+{#                    {% endfor %}#}
+{#                </div>#}
+{#            </div>#}
+
+{#            <div class="about-block">#}
+{#                <label class="about-block__label" for="about">Про мене:</label>#}
+{#                <textarea id="about" name="about" class="about-block__textarea">{{ user.about ?? '' }}</textarea>#}
+{#            </div>#}
+
+{#            <div class="about-block">#}
+{#                <button type="submit" class="auth-btn">Зберегти</button>#}
+{#                <a href="{{ path('app_logout') }}" class="auth-btn">Вийти</a>#}
+{#            </div>#}
+{#        </form>#}
+
+{#        <form action="{{ path('delete_account') }}" method="post" onsubmit="return confirm('Точно видалити акаунт?');">#}
+{#            <button type="submit" class="danger-btn">Видалити акаунт</button>#}
+{#        </form>#}
+{#    </div>#}
+{#{% endblock %}#}
+
+{#{% extends 'base.html.twig' %}#}
+{#{% block page_name %}profile{% endblock %}#}
+{#{% block stylesheets %}#}
+{#    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">#}
+{#{% endblock %}#}
+{#{% block content %}#}
+{#    <div class="profile-container">#}
+{#        <h2>Привіт!</h2>#}
+
+{#        <div class="profile-info-row">#}
+{#            <div class="profile-fields">#}
+{#                <div class="profile-field">#}
+{#                    <div class="pill profile-label">Пошта:</div>#}
+{#                    <div class="pill profile-value">{{ user.email }}</div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+
+{#        <div class="about-block">#}
+{#            <a href="{{ path('app_logout') }}" class="auth-btn" style="background-color: #f0f0f0; color: #333;">Вийти</a>#}
+{#        </div>#}
+{#    </div>#}
+{#{% endblock %}#}
 
 
 

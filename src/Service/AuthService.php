@@ -18,7 +18,7 @@ class AuthService
         $this->passwordHasher = $passwordHasher;
     }
 
-    public function register(string $email, string $plainPassword): ?User
+    public function register(SessionInterface $session, string $email, string $plainPassword): ?User
     {
         $user = new User();
         $user->setEmail($email);
@@ -28,7 +28,7 @@ class AuthService
 
         $this->em->persist($user);
         $this->em->flush();
-
+        $session->set('user_id', $user->getId());
         return $user;
     }
 

@@ -5,8 +5,8 @@ namespace App\Service;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ProfileService
@@ -15,7 +15,6 @@ class ProfileService
 
     public function updateProfile(Request $request): void
     {
-        /** @var User $user */
         $user = $this->security->getUser();
         if (!$user) {
             return;
@@ -25,25 +24,26 @@ class ProfileService
         $user->setPhone($request->request->get('phone'));
         $user->setAbout($request->request->get('about'));
 
-        // Interests
         $interestsInput = $request->request->get('interests', '');
         $interests = array_filter(array_map('trim', explode(',', $interestsInput)));
         $user->clearInterests();
         foreach ($interests as $interestName) {
-            $user->addInterestByName($interestName); // припускаємо, що метод реалізований
+            $user->addInterestByName($interestName);
         }
 
-        // Subjects
-        $user->clearSubjects();
-        $subjects = $request->request->all('subjects');
-        foreach ($subjects as $subject) {
-            if (!empty($subject['name']) && !empty($subject['score'])) {
-                $user->addSubjectFromArray($subject); // припускаємо, що метод реалізований
+        for ($i = 1; $i <= 4; $i++) {
+            $name = $request->request->get("subject{$i}_name");
+            $score = $request->request->get("subject{$i}_score");
+
+            if ($name && $score) {
+                $setterName = "setSubject{$i}Name";
+                $setterScore = "setSubject{$i}Score";
+
+                $user->$setterName($name);
+                $user->$setterScore((int)$score);
             }
         }
 
-        // Avatar
-        /** @var UploadedFile|null $avatar */
         $avatar = $request->files->get('avatar');
         if ($avatar) {
             $filename = uniqid() . '.' . $avatar->guessExtension();
@@ -53,5 +53,16 @@ class ProfileService
 
         $this->em->persist($user);
         $this->em->flush();
+
+    }
+    public function isProfileComplete(User $user): bool
+    {
+        return $user->getFullName() &&
+            $user->getPhone() &&
+            $user->getAbout() &&
+            $user->getSubject1Name() && $user->getSubject1Score() &&
+            $user->getSubject2Name() && $user->getSubject2Score() &&
+            $user->getSubject3Name() && $user->getSubject3Score() &&
+            $user->getSubject4Name() && $user->getSubject4Score();
     }
 }

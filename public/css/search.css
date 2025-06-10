@@ -1,7 +1,7 @@
 a { color: inherit; text-decoration: none; }
 
 #intro-message h1 {
-    background: linear-gradient(to right, #123C38, #2f8d77);
+    background: linear-gradient(to right, #2F5D62, #4CA7A2);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: bold;
@@ -10,15 +10,6 @@ a { color: inherit; text-decoration: none; }
     position: relative;
 }
 
-#intro-message h1::after {
-    content: '';
-    display: block;
-    width: 60px;
-    height: 4px;
-    background: #123C38;
-    margin: 6px auto 0 auto;
-    border-radius: 2px;
-}
 .page-container {
     display: flex;
     width: 100%;
@@ -29,6 +20,9 @@ a { color: inherit; text-decoration: none; }
     box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
     border-left: 4px solid #2f8d77;
     padding: 20px;
+    border-bottom-left-radius: 2rem;
+    border-bottom-right-radius: 2rem;
+    overflow: hidden;
 }
 .sidebar,
 #intro-message {
@@ -67,7 +61,7 @@ main {
     display: block;
     width: 40px;
     height: 3px;
-    background: #123C38;
+    background: #2F5D62;
     border-radius: 2px;
     margin-top: 4px;
 }
@@ -142,8 +136,8 @@ main img {
 
 }
 .search-btn {
-    background-color: #196a65;
-    color: white;
+    background-color: #3b8782;
+    color: #f0f0f0;
     font-weight: bold;
     padding: 10px 24px;
     border: none;
@@ -157,7 +151,7 @@ main img {
 }
 
 .search-btn:hover {
-    background-color: #333;
+    background-color: #2F5D62;
 }
 .reset-btn {
     background-color: transparent;
@@ -189,8 +183,8 @@ main img {
 .mobile-filter-btn {
     display: none;
     padding: 12px;
-    background: #000;
-    color: #fff;
+    background-color: #3b8782;
+    color: #f0f0f0;
     font-weight: bold;
     border: none;
     border-radius: 8px;
@@ -271,7 +265,7 @@ main img {
         left: 100%;
         width: 100%;
         height: 100%;
-        background: #f0f0f0;
+        background: #f2f8ff;
         z-index: 999;
         overflow-y: auto;
         transition: left 0.3s ease;
@@ -321,8 +315,8 @@ main img {
         transform: scale(1.03);
     }
     .mobile-filter-btn {
-        background: #000;
-        color: #fff;
+        background-color: #3b8782;
+        color: #f0f0f0;
         border: none;
     }
 
