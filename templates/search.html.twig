@@ -233,6 +233,79 @@
             {% endif %}
         {% endif %}
     </div>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchForm = document.getElementById('searchForm');
+
+            if (!searchForm) return;
+
+
+            const filters = JSON.parse(localStorage.getItem('searchFilters') || '{}');
+
+            for (let i = 1; i <= 4; i++) {
+                const subjectSelect = document.querySelector(`select[name="subject${i}"]`);
+                const scoreInput = document.querySelector(`input[name="score${i}"]`);
+
+                if (subjectSelect && filters[`subject${i}`]) {
+                    subjectSelect.value = filters[`subject${i}`];
+                }
+
+                if (scoreInput && filters[`score${i}`]) {
+                    scoreInput.value = filters[`score${i}`];
+                }
+            }
+
+            const cityInput = document.querySelector('input[name="city"]');
+            const specialtyInput = document.querySelector('input[name="specialty"]');
+            const priceFrom = document.querySelector('input[name="price_from"]');
+            const priceTo = document.querySelector('input[name="price_to"]');
+            const military = document.querySelector('input[name="military"]');
+
+            if (cityInput && filters.city) cityInput.value = filters.city;
+            if (specialtyInput && filters.specialty) specialtyInput.value = filters.specialty;
+            if (priceFrom && filters.price_from) priceFrom.value = filters.price_from;
+            if (priceTo && filters.price_to) priceTo.value = filters.price_to;
+            if (military) military.checked = filters.military === true;
+
+
+            if (Object.keys(filters).length > 0 && !sessionStorage.getItem('autoSearchTriggered')) {
+                sessionStorage.setItem('autoSearchTriggered', '1');
+                setTimeout(() => {
+                    searchForm.submit();
+                }, 300);
+            }
+
+
+            searchForm.addEventListener('submit', () => {
+                const newFilters = {};
+
+                for (let i = 1; i <= 4; i++) {
+                    const subjectSelect = document.querySelector(`select[name="subject${i}"]`);
+                    const scoreInput = document.querySelector(`input[name="score${i}"]`);
+
+                    if (subjectSelect && scoreInput) {
+                        newFilters[`subject${i}`] = subjectSelect.value;
+                        newFilters[`score${i}`] = scoreInput.value;
+                    }
+                }
+
+                newFilters['city'] = cityInput ? cityInput.value : '';
+                newFilters['specialty'] = specialtyInput ? specialtyInput.value : '';
+                newFilters['price_from'] = priceFrom ? priceFrom.value : '';
+                newFilters['price_to'] = priceTo ? priceTo.value : '';
+                newFilters['military'] = military ? military.checked : false;
+
+                localStorage.setItem('searchFilters', JSON.stringify(newFilters));
+            });
+
+
+            document.querySelectorAll('#searchForm input, #searchForm select').forEach(el => {
+                el.addEventListener('change', () => {
+                    sessionStorage.removeItem('autoSearchTriggered');
+                });
+            });
+        });
+    </script>
+
 </div>
 {% endblock %}
