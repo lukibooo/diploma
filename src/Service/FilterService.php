@@ -12,108 +12,122 @@ class FilterService
     {
     }
 
-    public function getFilteredResults(array $userSubjects, ?string $city, ?string $specialtyName, ?int $priceFrom, ?int $priceTo, bool $military): array
+    public function getFilteredResults(Request $request): array
     {
-        $subjectNames = array_column($userSubjects, 'subject');
+        $city = $request->request->get('city');
+        $specialtyName = $request->request->get('specialty');
+        $priceFrom = $request->request->get('price_from');
+        $priceTo = $request->request->get('price_to');
+        $military = $request->request->get('military');
+        $subjects = $request->request->all();
 
         $qb = $this->em->createQueryBuilder()
-            ->select('u', 's', 'c', 'n', 'subj')
-            ->from(University::class, 'u')
-            ->join('u.city', 'c')
-            ->join('u.specialties', 's')
-            ->join('s.numbers', 'n')
-            ->join('n.subject', 'subj')
-            ->where('subj.name IN (:subjectNames)')
-            ->setParameter('subjectNames', $subjectNames);
+            ->select('s', 'u', 'c', 'n', 'subj')
+            ->from(Specialties::class, 's')
+            ->leftJoin('s.university', 'u')
+            ->leftJoin('u.city', 'c')
+            ->leftJoin('s.numbers', 'n')
+            ->leftJoin('n.subject', 'subj')
+//            ->setMaxResults(40)
+        ;
+
+        if ($specialtyName) {
+            $qb->andWhere('LOWER(TRIM(s.name)) = :specialty')
+                ->setParameter('specialty', mb_strtolower(trim($specialtyName)));
+        }
 
         if ($city) {
             $qb->andWhere('c.name = :city')->setParameter('city', $city);
         }
-
-        if ($specialtyName) {
-            $qb->andWhere('s.name LIKE :specialty')->setParameter('specialty', '%' . $specialtyName . '%');
-        }
-
-        if ($priceFrom !== null) {
+        if (is_numeric($priceFrom)) {
             $qb->andWhere('s.price >= :priceFrom')->setParameter('priceFrom', $priceFrom);
         }
 
-        if ($priceTo !== null) {
-            $qb->andWhere('s.price <= :priceTo')->setParameter('priceTo', $priceTo);
+        if (is_numeric($priceTo)) {
+            $qb->andWhere('s.price <= :priceTo')->setParameter('priceTo', (int) $priceTo);
         }
 
         if ($military) {
-            $qb->andWhere('u.hasMilitary = true');
+            $qb->andWhere('u.military = true');
         }
 
-        $results = $qb->getQuery()->getResult();
+//        $specialties = $qb->getQuery()->getResult();
+//        $output = [];
+//
+//        foreach ($specialties as $specialty) {
+//            $university = $specialty->getUniversity();
+//            $numbers = $specialty->getNumbers();
+//            $coefficientSum = 0;
+//            foreach ($numbers as $number) {
+//                $coefficientSum += $number->getValue();
+//            }
+//
+//            $normalizationFactor = ($coefficientSum > 1.0) ? 1.0 / $coefficientSum : 1.0;
+//
+//            $matchedSubjects = [];
+//            $matchedNames = [];
+//            $totalScore = 0;
+//
+//            foreach ($specialty->getNumbers() as $number) {
+//                $subjectName = mb_strtolower($number->getSubject()->getName());
+//                $coefficient = $number->getValue(); // або правильний геттер
+//
+//                foreach ($userSubjects as $userSubject) {
+//                    if (
+//                        mb_strtolower($userSubject['subject']) === $subjectName &&
+//                        is_numeric($userSubject['score'])
+//                    ) {
+//                        $scorePart = $userSubject['score'] * $coefficient;
+//                        $totalScore += $scorePart;
+//                    }
+//                }
+//            }
+//            $finalScore = min(round($totalScore, 2), 178);
+//            $output[] = [
+//                'university' => $university,
+//                'specialty' => $specialty,
+//                'score' => $finalScore,
+//                'matchedSubjects' => $matchedSubjects,
+//            ];
+//        }
+        return $qb->getQuery()->getResult();
 
-        $output = [];
-
-        foreach ($results as $university) {
-            foreach ($university->getSpecialties() as $specialty) {
-                $numbers = $specialty->getNumbers(); // список Number (коефіцієнти з предметами)
-
-                // Розрахунок суми коефіцієнтів
-                $coefficientSum = 0;
-                foreach ($numbers as $number) {
-                    $coefficientSum += $number->getValue();
-                }
-
-                // Масштабування коефіцієнтів, якщо перевищують норму
-                $normalizationFactor = ($coefficientSum > 1.0) ? 1.0 / $coefficientSum : 1.0;
-
-                $matchedSubjects = [];
-                $totalScore = 0;
-                $matchedNames = [];
-
-                foreach ($userSubjects as $userSubject) {
-                    $subjectName = $userSubject['subject'];
-                    $userScore = $userSubject['score'];
-
-                    // Знаходимо коефіцієнт для предмета
-                    $coefficient = null;
-                    foreach ($numbers as $number) {
-                        if ($number->getSubject()->getName() === $subjectName) {
-                            $coefficient = $number->getValue();
-                            break;
-                        }
-                    }
-
-                    // Додаємо, якщо знайдено відповідність
-                    if ($coefficient !== null && !in_array($subjectName, $matchedNames, true)) {
-                        $scaledCoef = $coefficient * $normalizationFactor;
-                        $scorePart = $userScore * $scaledCoef;
-                        $totalScore += $scorePart;
-
-                        $matchedSubjects[] = [
-                            'subject' => $subjectName,
-                            'userScore' => $userScore,
-                            'coefficient' => round($coefficient, 2),
-                            'scaledCoef' => round($scaledCoef, 3),
-                            'scorePart' => round($scorePart, 2),
-                        ];
-
-                        $matchedNames[] = $subjectName;
-                    }
-                }
-
-                // Додаємо, якщо всі предмети знайдено
-                if (count($matchedSubjects) === count($userSubjects)) {
-                    $finalScore = min(round($totalScore, 2), 200);
-
-                    $output[] = [
-                        'university' => $university,
-                        'specialty' => $specialty,
-                        'score' => $finalScore,
-                        'matchedSubjects' => $matchedSubjects,
-                    ];
-                }
-            }
-        }
-
-        usort($output, fn($a, $b) => $b['score'] <=> $a['score']);
-
-        return $output;
     }
+//    public function countFilteredResults(array $filters): int
+//    {
+//        $qb = $this->em->createQueryBuilder()
+//            ->select('COUNT(DISTINCT s.id)')
+//            ->from(Specialties::class, 's')
+//            ->leftJoin('s.university', 'u')
+//            ->leftJoin('s.numbers', 'n')
+//            ->leftJoin('n.subject', 'subj');
+//
+//        if (!empty($filters['city'])) {
+//            $qb->andWhere('LOWER(TRIM(u.city)) = LOWER(:city)')
+//                ->setParameter('city', mb_strtolower(trim($filters['city'])));
+//        }
+//
+//        if (!empty($filters['specialty'])) {
+//            $qb->andWhere('LOWER(TRIM(s.name)) LIKE LOWER(:specialty)')
+//                ->setParameter('specialty', '%' . trim($filters['specialty']) . '%');
+//        }
+//
+//        if (!empty($filters['priceFrom'])) {
+//            $qb->andWhere('s.price >= :priceFrom')
+//                ->setParameter('priceFrom', $filters['priceFrom']);
+//        }
+//
+//        if (!empty($filters['priceTo'])) {
+//            $qb->andWhere('s.price <= :priceTo')
+//                ->setParameter('priceTo', $filters['priceTo']);
+//        }
+//
+//        if (!empty($filters['military'])) {
+//            $qb->andWhere('s.military = :military')
+//                ->setParameter('military', true);
+//        }
+////        dd($qb->getQuery()->getScalarResult());
+//        return (int) $qb->getQuery()->getSingleScalarResult();
+//    }
+
 }

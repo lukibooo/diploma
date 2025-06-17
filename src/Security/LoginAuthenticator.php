@@ -33,21 +33,21 @@ class LoginAuthenticator extends AbstractLoginFormAuthenticator
         );
     }
     use TargetPathTrait;
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): RedirectResponse
-    {
-        $targetPath = $this->getTargetPath($request->getSession(), $firewallName);
-
-        if ($targetPath) {
-            return new RedirectResponse($targetPath);
-        }
-
-        return new RedirectResponse($this->urlGenerator->generate('profile'));
-    }
-//    public function onAuthenticationSuccess(Request $request, $token, string $firewallName): RedirectResponse
+//    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): RedirectResponse
 //    {
-//        return new RedirectResponse($this->urlGenerator->generate('profile'));
+//        $targetPath = $this->getTargetPath($request->getSession(), $firewallName);
 //
+//        if ($targetPath) {
+//            return new RedirectResponse($targetPath);
+//        }
+//
+//        return new RedirectResponse($this->urlGenerator->generate('profile'));
 //    }
+    public function onAuthenticationSuccess(Request $request, $token, string $firewallName): RedirectResponse
+    {
+        return new RedirectResponse($this->urlGenerator->generate('profile'));
+
+    }
 
     protected function getLoginUrl(Request $request): string
     {

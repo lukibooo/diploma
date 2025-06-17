@@ -22,7 +22,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $avatar = null;
-
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private ?string $avatarStyle = 'bottts';
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -55,8 +56,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $subject4Name = null;
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $subject4Score = null;
-
-    #[ORM\ManyToMany(targetEntity: Interest::class, mappedBy: 'users')]
+    #[ORM\ManyToMany(targetEntity: Specialties::class)]
+    private Collection $favoriteSpecialties;
+    #[ORM\ManyToMany(targetEntity: Interest::class, inversedBy: 'users', cascade: ['persist'])]
     private Collection $interests;
 
     public function getUserIdentifier(): string
@@ -66,7 +68,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-        // Якщо не зберігаєш тимчасові чутливі дані — залиш порожнім
+
     }
     public function getEmail(): ?string
     {
@@ -134,10 +136,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+    public function getAvatarStyle(): ?string
+    {
+        return $this->avatarStyle;
+    }
+
+    public function setAvatarStyle(?string $avatarStyle): self
+    {
+        $this->avatarStyle = $avatarStyle;
+        return $this;
+    }
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->interests = new ArrayCollection();
+        $this->favoriteSpecialties = new ArrayCollection();
     }
     public function getCreatedAt(): ?\DateTimeImmutable
     {
@@ -150,7 +164,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+    public function getFavoriteSpecialties(): Collection
+    {
+        return $this->favoriteSpecialties;
+    }
+    public function addFavoriteSpecialty(Specialties $specialty): self
+    {
+        if (!$this->favoriteSpecialties->contains($specialty)) {
+            $this->favoriteSpecialties->add($specialty);
+        }
+        return $this;
+    }
 
+    public function removeFavoriteSpecialty(Specialties $specialty): self
+    {
+        $this->favoriteSpecialties->removeElement($specialty);
+        return $this;
+    }
     public function getRoles(): array
     {
         $roles = $this->roles;
@@ -186,7 +216,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-// Subject 2
+
     public function getSubject2Name(): ?string
     {
         return $this->subject2Name;

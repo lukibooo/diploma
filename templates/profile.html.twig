@@ -5,273 +5,291 @@
 {% endblock %}
 {% block content %}
 <div class="profile-container">
-    {% if showAlert %}
-        <div class="alert-warning">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
-            </svg>
-            Заповніть ваш профіль, щоб продовжити користування платформою.
-        </div>
-    {% endif %}
-
-
-    <form action="{{ path('profile_save') }}" method="post" enctype="multipart/form-data">
-        <div class="profile-info-row">
-            <div class="profile-fields">
-                <div class="profile-field">
-                    <div class="pill profile-label">ПІБ:</div>
-                    <div class="pill profile-value">{{ user.fullName }}</div>
-                </div>
-                <div class="profile-field">
-                    <div class="pill profile-label">Номер:</div>
-                    <div class="pill profile-value">{{ user.phone }}</div>
-                </div>
-                <div class="profile-field">
-                    <div class="pill profile-label">Пошта:</div>
-                    <div class="pill profile-value">{{ user.email }}</div>
-                </div>
+        {% if showAlert %}
+            <div class="alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                </svg>
+                Заповніть ваш профіль,будь ласка.
             </div>
-            <div class="profile-avatar-wrapper">
-                <img class="profile-avatar" src="{{ asset(user.photo ?? 'images/profile.jpg') }}" alt="Аватар">
-                <a href="{{ path('profile', { edit: 1 }) }}" class="edit-profile">Редагувати профіль</a>
-            </div>
-        </div>
+        {% endif %}
 
-    <div class="about-block">
-        <h3 class="pill profile-label">Предмети</h3>
-        <div class="subjects-wrapper">
-            {% for i in 1..4 %}
-                <div class="subject-block">
-                    {% set nameField = attribute(user, 'subject' ~ i ~ 'Name') %}
-                    {% set scoreField = attribute(user, 'subject' ~ i ~ 'Score') %}
+
+        <form action="{{ path('profile_save') }}" method="post" enctype="multipart/form-data">
+            <div class="profile-info-row">
+                <div class="profile-fields">
+                    <div class="profile-field">
+                        <div class="pill profile-label">ПІБ:</div>
+                        {% if editMode %}
+                            <input type="text" name="fullName" class="pill profile-value" value="{{ user.fullName ?? '' }}" required>
+                        {% else %}
+                            <div class="pill profile-value">{{ user.fullName }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="profile-field">
+                        <div class="pill profile-label">Номер:</div>
+                        {% if editMode %}
+                            <input type="tel" name="phone" class="pill profile-value" value="{{ user.phone ?? '' }}" required>
+                        {% else %}
+                            <div class="pill profile-value">{{ user.phone }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="profile-field">
+                        <div class="pill profile-label">Пошта:</div>
+                        <div class="pill profile-value">{{ user.email }}</div>
+                    </div>
+                </div>
+                <div class="profile-avatar-wrapper">
+                    <img id="avatar-preview" src="https://api.dicebear.com/7.x/{{ user.avatarStyle|default('avataaars') }}/svg?seed={{ user.avatar|default('happyCat') }}&size=200" alt="Аватар" width="200" class="profile-avatar">
                     {% if editMode %}
-                        <input type="text" name="subject{{ i }}_name" list="subjects-list" placeholder="Назва предмета" value="{{ nameField ?? '' }}" class="pill" required>
-                        <input type="number" name="subject{{ i }}_score" placeholder="Бал" min="100" max="200" value="{{ scoreField ?? '' }}" class="pill" required>
+                        <label for="avatar_style">Стиль аватара:</label>
+                        <select name="avatar_style" id="avatar_style">
+                            <option value="avataaars" {% if user.avatarStyle == 'avataaars' %}selected{% endif %}>avataaars</option>
+                            <option value="icons" {% if user.avatarStyle == 'icons' %}selected{% endif %}>icons</option>
+                        </select>
+
+                        <label for="avatar" style="margin-top: 1rem;">Оберіть аватар:</label>
+                        <div id="avatar-seed-container" class="avatar-options" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const styleSelect = document.getElementById('avatar_style');
+                                    const container = document.getElementById('avatar-seed-container');
+                                    const previewImg = document.getElementById('avatar-preview');
+
+                                    const seedMap = {
+                                        avataaars: ['happyCat', 'softSun', 'lazyKoala', 'mintFox', 'starPanda'],
+                                        icons: ['owlmoon', 'leafie', 'ghostcat', 'heartbee', 'mousie']
+                                    };
+
+                                    function renderSeeds(style) {
+                                        container.innerHTML = '';
+                                        const seeds = seedMap[style] || [];
+
+                                        seeds.forEach(seed => {
+                                            const label = document.createElement('label');
+                                            label.style.textAlign = 'center';
+
+                                            const input = document.createElement('input');
+                                            input.type = 'radio';
+                                            input.name = 'avatar';
+                                            input.value = seed;
+
+                                            input.addEventListener('change', updatePreview);
+
+                                            const img = document.createElement('img');
+                                            img.src = `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&size=80`;
+                                            img.alt = seed;
+
+                                            const caption = document.createElement('div');
+                                            caption.style.fontSize = '0.8rem';
+                                            caption.innerText = seed;
+
+                                            label.appendChild(input);
+                                            label.appendChild(img);
+                                            label.appendChild(caption);
+                                            container.appendChild(label);
+                                        });
+                                    }
+
+                                    function updatePreview() {
+                                        const style = styleSelect.value;
+                                        const seed = document.querySelector('input[name="avatar"]:checked')?.value;
+
+                                        if (style && seed) {
+                                            const newUrl = `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(seed)}&size=200`;
+                                            previewImg.src = newUrl;
+                                        }
+                                    }
+
+                                    styleSelect.addEventListener('change', () => {
+                                        renderSeeds(styleSelect.value);
+                                        setTimeout(updatePreview, 10);
+                                    });
+
+                                    renderSeeds(styleSelect.value);
+                                    setTimeout(updatePreview, 10);
+                                });
+                            </script>
+                        </div>
+                    {% endif %}
+
+                    <a href="{{ path('profile', { edit: 1 }) }}" class="edit-profile">Редагувати профіль</a>
+                </div>
+            </div>
+
+        <div class="about-block">
+            <h3 class="pill profile-label">Предмети</h3>
+            <div class="subjects-wrapper">
+                {% for i in 1..4 %}
+                    <div class="subject-block">
+                        {% set nameField = attribute(user, 'subject' ~ i ~ 'Name') %}
+                        {% set scoreField = attribute(user, 'subject' ~ i ~ 'Score') %}
+                        {% if editMode %}
+                            <div class="subject-block">
+                                <div class="autocomplete-wrapper">
+                                    <input type="text" name="subject{{ i }}_name" id="subject-name-{{ i }}" class="subject-input" placeholder="Назва предмета" value="{{ nameField ?? '' }}" autocomplete="off" required>
+                                    <div id="subject-list-{{ i }}" class="autocomplete-list"></div>
+                                </div>
+                                <input type="number" name="subject{{ i }}_score" placeholder="Бал" min="100" max="200" value="{{ scoreField ?? '' }}" class="pill" required>
+                            </div>
+                        {% else %}
+                            {% if nameField %}
+                                <div class="pill">{{ nameField }}: {{ scoreField }}</div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+                <script>
+                    console.log("Path to autocomplete:", "{{ path('subject_autocomplete') }}");
+                    function setupAutocomplete(inputId, listId, url) {
+                        const input = document.getElementById(inputId);
+                        const list = document.getElementById(listId);
+
+                        input.addEventListener('input', function () {
+                            const query = this.value;
+                            if (query.length < 2) {
+                                list.innerHTML = '';
+                                return;
+                            }
+
+                            fetch(url + '?q=' + encodeURIComponent(query))
+                                .then(res => res.json())
+                                .then(data => {
+                                    list.innerHTML = '';
+                                    data.forEach(item => {
+                                        const div = document.createElement('div');
+                                        div.textContent = item;
+                                        div.classList.add('autocomplete-item');
+                                        div.onclick = () => {
+                                            input.value = item;
+                                            list.innerHTML = '';
+                                        };
+                                        list.appendChild(div);
+                                    });
+                                });
+                        });
+
+                        document.addEventListener('click', (e) => {
+                            if (!list.contains(e.target) && e.target !== input) {
+                                list.innerHTML = '';
+                            }
+                        });
+                    }
+                    document.addEventListener('DOMContentLoaded', () => {
+                        setupAutocomplete('subject-name-1', 'subject-list-1', '{{ path('subject_autocomplete') }}');
+                        setupAutocomplete('subject-name-2', 'subject-list-2', '{{ path('subject_autocomplete') }}');
+                        setupAutocomplete('subject-name-3', 'subject-list-3', '{{ path('subject_autocomplete') }}');
+                        setupAutocomplete('subject-name-4', 'subject-list-4', '{{ path('subject_autocomplete') }}');
+                    });
+                </script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        document.querySelectorAll('.subject-input').forEach(input => {
+                            let dropdown;
+
+                            input.addEventListener('input', async (e) => {
+                                const query = e.target.value.trim();
+                                if (query.length < 2) return;
+
+                                const res = await fetch(`/subjects/autocomplete?q=${encodeURIComponent(query)}`);
+                                const suggestions = await res.json();
+
+                                // Очистити попередній список
+                                if (dropdown) dropdown.remove();
+
+                                dropdown = document.createElement('ul');
+                                dropdown.className = 'autocomplete-list';
+
+                                suggestions.forEach(name => {
+                                    const item = document.createElement('li');
+                                    item.textContent = name;
+                                    item.className = 'autocomplete-item';
+                                    item.onclick = () => {
+                                        input.value = name;
+                                        dropdown.remove();
+                                    };
+                                    dropdown.appendChild(item);
+                                });
+
+                                input.parentNode.appendChild(dropdown);
+                            });
+
+                            document.addEventListener('click', (e) => {
+                                if (dropdown && !input.contains(e.target)) {
+                                    dropdown.remove();
+                                }
+                            });
+                        });
+                    });
+                </script>
+            <div class="interests-row">
+                <div class="pill profile-label">Інтереси:</div>
+                <div class="interests-list">
+                    {% if editMode %}
+                        <div class="interests-edit-wrapper">
+                        {% for interest in allInterests %}
+                            <label class="interest-pill">
+                                <input type="checkbox" name="interests[]" value="{{ interest.id }}" {% if interests is defined and interest in interests %}checked{% endif %}>
+                                <span>{{ interest.name }}</span>
+                            </label>
+                        {% endfor %}
+                        </div>
                     {% else %}
-                        {% if nameField %}
-                            <div class="pill">{{ nameField }}: {{ scoreField }}</div>
+                        {% if user_allInterests is not empty %}
+                            {% for interest in user_allInterests %}
+                                <span class="interest-pill">{{ interest.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="interest-pill" style="opacity: 0.6;">(немає вибраних інтересів)</span>
                         {% endif %}
                     {% endif %}
                 </div>
-            {% endfor %}
-        </div>
-        <datalist id="subjects-list">
-            <option value="Українська мова">
-            <option value="Математика">
-            <option value="Історія України">
-            <option value="Біологія">
-            <option value="Географія">
-            <option value="Фізика">
-            <option value="Хімія">
-            <option value="Англійська мова">
-            <option value="Німецька мова">
-        </datalist>
-    </div>
+            </div>
 
-    <div class="interests-row">
-        <div class="pill profile-label">Інтереси:</div>
-        <div class="interests-list">
-            {% for interest in allInterests %}
-                <label class="interest-pill">
-                    {% if editMode %}
-                        <input type="checkbox" name="interests[]" value="{{ interest.id }}" {% if interest in user.interests %}checked{% endif %}>
-                    {% endif %}
-                    {{ interest.name }}
-                </label>
-            {% endfor %}
+        <div class="about-block">
+            <label class="pill profile-label" for="about">Про мене:</label>
+            {% if editMode %}
+                <textarea id="about" name="about" class="about-preview">{{ user.about ?? '' }}</textarea>
+            {% else %}
+                <div class="pill profile-value">{{ user.about }}</div>
+            {% endif %}
         </div>
-    </div>
+            {% if favoriteSpecialties|length > 0 %}
+                <div class="saved-specialties">
+                    <div class="pill profile-label">Збережені спеціальності:</div>
+                    <div class="saved-specialty-list" >
+                        {% for specialty in favoriteSpecialties %}
+                            <a class="saved-specialty-pill-link" href="{{ path('university_detail', { id: specialty.university.id }) ~ '?specialty=' ~ specialty.id }}">
+                                <div class="saved-specialty-pill">
+                                    {{ specialty.name }}
+                                    <span class="saved-specialty-university">
+                                        ({{ specialty.university.name }})
+                                    </span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="about-block__label">Збережені спеціальності:</div>
+                <p class="saved-specialty-pill">Наразі у вас немає збережених спеціальностей.</p>
+            {% endif %}
+            </div>
+        <div class="profile-button-row">
+            {% if editMode %}
+                <button type="submit" class="profile-button-row exit-btn">Зберегти</button>
+            {% endif %}
 
-    <div class="about-block">
-        <label class="pill profile-label" for="about">Про мене:</label>
-        {% if editMode %}
-            <textarea id="about" name="about" class="about-preview">{{ user.about ?? '' }}</textarea>
-        {% else %}
-            <div class="pill profile-value">{{ user.about }}</div>
-        {% endif %}
-    </div>
-<div class="profile-button-row">
-        {% if editMode %}
-            <button type="submit" class="edit-profile">Зберегти</button>
-        {% endif %}
+        </div>
+        </form>
+    <div class="profile-button-row">
         <a href="{{ path('app_logout') }}" class="profile-button-row exit-btn">Вийти</a>
         <form action="{{ path('delete_account') }}" method="post" onsubmit="return confirm('Точно видалити акаунт?');">
             <button type="submit" class="profile-button-row danger-btn">Видалити акаунт</button>
         </form>
-</div>
-</form>
 
+    </div>
 
 </div>
 {% endblock %}
-
-
-{#% extends 'base.html.twig' %}#}
-{#{% block page_name %}profile{% endblock %}#}
-{#{% block stylesheets %}#}
-{#    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">#}
-{#{% endblock %}#}
-{#{% block content %}#}
-{#    {% if showAlert %}#}
-{#        <div class="alert alert-warning">#}
-{#            🔔 Заповніть ваш профіль, щоб продовжити користування платформою.#}
-{#        </div>#}
-{#    {% endif %}#}
-{#    <div class="profile-container">#}
-{#        <h2>Привіт, {{ user.email }}</h2>#}
-
-{#        <form action="{{ path('profile_save') }}" method="post" enctype="multipart/form-data">#}
-{#            <div class="profile-info-row">#}
-{#                <div class="profile-fields">#}
-{#                    <div class="profile-field">#}
-{#                        <div class="pill profile-label">ПІБ:</div>#}
-{#                        <input type="text" name="full_name" class="pill profile-value" value="{{ user.fullName ?? '' }}" required>#}
-{#                    </div>#}
-{#                    <div class="profile-field">#}
-{#                        <div class="pill profile-label">Номер:</div>#}
-{#                        <input type="tel" name="phone" class="pill profile-value" value="{{ user.phone ?? '' }}" required>#}
-{#                    </div>#}
-{#                    <div class="profile-field">#}
-{#                        <div class="pill profile-label">Пошта:</div>#}
-{#                        <div class="pill profile-value">{{ user.email }}</div>#}
-{#                    </div>#}
-{#                </div>#}
-{#                <div class="profile-avatar-wrapper">#}
-{#                    <img class="profile-avatar" src="{{ asset(user.photo ?? 'images/profile.jpg') }}" alt="Аватар">#}
-{#                    <input type="file" name="photo">#}
-{#                </div>#}
-{#            </div>#}
-
-{#            <ul class="scores-list">#}
-{#                {% for result in user.subjectResults %}#}
-{#                    <li class="score-item pill">#}
-{#                        <span>{{ result.subject.name }}</span>#}
-{#                        <input type="number" name="scores[{{ result.subject.id }}]" value="{{ result.score }}" min="100" max="200" required>#}
-{#                    </li>#}
-{#                {% endfor %}#}
-{#            </ul>#}
-
-{#            <div class="interests-row">#}
-{#                <div class="pill profile-label">Інтереси:</div>#}
-{#                <div class="interests-list">#}
-{#                    {% for interest in allInterests %}#}
-{#                        <label class="interest-pill">#}
-{#                            <input type="checkbox" name="interests[]" value="{{ interest.id }}" {% if interest in user.interests %}checked{% endif %}>#}
-{#                            {{ interest.name }}#}
-{#                        </label>#}
-{#                    {% endfor %}#}
-{#                </div>#}
-{#            </div>#}
-
-{#            <div class="about-block">#}
-{#                <label class="about-block__label" for="about">Про мене:</label>#}
-{#                <textarea id="about" name="about" class="about-block__textarea">{{ user.about ?? '' }}</textarea>#}
-{#            </div>#}
-
-{#            <div class="about-block">#}
-{#                <button type="submit" class="auth-btn">Зберегти</button>#}
-{#                <a href="{{ path('app_logout') }}" class="auth-btn">Вийти</a>#}
-{#            </div>#}
-{#        </form>#}
-
-{#        <form action="{{ path('delete_account') }}" method="post" onsubmit="return confirm('Точно видалити акаунт?');">#}
-{#            <button type="submit" class="danger-btn">Видалити акаунт</button>#}
-{#        </form>#}
-{#    </div>#}
-{#{% endblock %}#}
-
-{#{% extends 'base.html.twig' %}#}
-{#{% block page_name %}profile{% endblock %}#}
-{#{% block stylesheets %}#}
-{#    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">#}
-{#{% endblock %}#}
-{#{% block content %}#}
-{#    <div class="profile-container">#}
-{#        <h2>Привіт!</h2>#}
-
-{#        <div class="profile-info-row">#}
-{#            <div class="profile-fields">#}
-{#                <div class="profile-field">#}
-{#                    <div class="pill profile-label">Пошта:</div>#}
-{#                    <div class="pill profile-value">{{ user.email }}</div>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-
-{#        <div class="about-block">#}
-{#            <a href="{{ path('app_logout') }}" class="auth-btn" style="background-color: #f0f0f0; color: #333;">Вийти</a>#}
-{#        </div>#}
-{#    </div>#}
-{#{% endblock %}#}
-
-
-
-
-{#{% extends 'base.html.twig' %}#}
-{#{% block page_name %}profile{% endblock %}#}
-{#{% block stylesheets %}#}
-{#    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">#}
-{#{% endblock %}#}
-{#{% block content %}#}
-
-{#    <div class="profile-container">#}
-
-{#        <div class="profile-info-row">#}
-{#            <div class="profile-fields">#}
-{#                <div class="profile-field">#}
-{#                    <div class="pill profile-label">ПІБ:</div>#}
-{#                    <div class="pill profile-value">Кизь Людмила Леонідівна</div>#}
-{#                </div>#}
-{#                <div class="profile-field">#}
-{#                    <div class="pill profile-label">Номер:</div>#}
-{#                    <div class="pill profile-value">+380970675123</div>#}
-{#                </div>#}
-{#                <div class="profile-field">#}
-{#                    <div class="pill profile-label">Пошта:</div>#}
-{#                    <div class="pill profile-value">liuda.kiz@gmail.com</div>#}
-{#                </div>#}
-{#            </div>#}
-{#            <div class="profile-avatar-wrapper">#}
-{#                <img class="profile-avatar" src="images/profile.jpg" alt="Аватар Людмили">#}
-{#                <a href="#" class="edit-profile">Редагувати профіль</a>#}
-{#            </div>#}
-{#        </div>#}
-
-
-{#        <ul class="scores-list">#}
-{#            <li class="score-item pill">#}
-{#                <span>Українська мова</span>#}
-{#                <span>188</span>#}
-{#            </li>#}
-{#            <li class="score-item pill">#}
-{#                <span>Математика</span>#}
-{#                <span>169</span>#}
-{#            </li>#}
-{#            <li class="score-item pill">#}
-{#                <span>Англійська мова</span>#}
-{#                <span>164</span>#}
-{#            </li>#}
-{#            <li class="score-item pill">#}
-{#                <span>Фізика</span>#}
-{#                <span>163</span>#}
-{#            </li>#}
-{#        </ul>#}
-
-
-{#        <div class="interests-row">#}
-{#            <div class="pill profile-label">Інтереси:</div>#}
-{#            <input class="interest-input" type="text" placeholder="Додати інтерес…"/>#}
-{#        </div>#}
-{#        <div class="about-block">#}
-{#            <label class="about-block__label" for="about">Про мене:</label>#}
-{#            <textarea id="about" class="about-block__textarea" placeholder="Напишіть кілька слів про себе…"></textarea>#}
-{#        </div>#}
-{#        <div class="about-block">#}
-{#            <label class="about-block__label" for="about">Збережені університети:</label>#}
-{#        </div>#}
-
-{#    </div>#}
-
-
-
-{#{% endblock %}#}

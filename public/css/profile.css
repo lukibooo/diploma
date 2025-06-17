@@ -8,7 +8,7 @@
 .pill {
     display: inline-flex;
     align-items: center;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 999px;
     background-color: #d3ece9;
     color: #000000;
@@ -134,15 +134,19 @@
 
 .interests-list {
     display: flex;
-    flex-wrap: wrap;
     gap: 12px;
 }
 
 .interest-pill {
-    padding: 8px 12px;
-    background-color: #d3ece9;
-    border-radius: 999px;
-    font-size: 0.9rem;
+    display: flex;
+    margin-top: 0.5rem;
+    padding: 12px;
+    background-color: #f4fdfc;
+    border: 1px solid #cdebe7;
+    border-radius: 20px;
+    font-family: 'Anonymous Pro', monospace;
+    font-size: 1rem;
+    text-align: left;
 }
 
 .interest-input {
@@ -155,12 +159,13 @@
 }
 .edit-profile {
     display: inline-block;
+    text-align: center;
     padding: 10px 20px;
     background-color:#3b8782;
     color: #f0f0f0;
     border-radius: 999px;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 .profile-save-btn:hover,
 .edit-profile:hover {
@@ -174,7 +179,7 @@
     padding: 16px 20px;
     font-family: 'Anonymous Pro', monospace;
     font-size: 1rem;
-    line-height: 1.8; /* ⬅️ міжрядковий */
+    line-height: 1.8;
     text-align: left;
     white-space: pre-wrap;
     width: 100%;
@@ -241,7 +246,10 @@
         width: 140px;
         height: 140px;
     }
-
+    .profile-button-row{
+        flex-direction: column;
+        gap: 8px;
+    }
     .edit-profile {
         margin-top: 12px;
         width: auto;
@@ -252,10 +260,13 @@
         justify-content: center;
     }
 
+    .subjects-list,
     .subject-block {
+        font-size: 0.9rem;
         flex-direction: column;
         text-align: center;
-        width: auto;
+        align-items: stretch;
+        width: 100%;
     }
     .subject-block input[type="text"],
     .subject-block input[type="number"] {
@@ -263,6 +274,7 @@
         text-align: center;
     }
 }
+.subjects-list,
 .subjects-wrapper {
     display: flex;
     flex-wrap: wrap;
@@ -271,24 +283,25 @@
 
 .subject-block {
     flex-direction: row;
-    /*display: inline-flex;*/
-    /*align-items: center;*/
-    /*gap: 8px;*/
+    display: inline-flex;
+    gap: 8px;
+    align-items: flex-start;
     /*background-color: #e5f8f6;*/
-    /*padding: 8px 16px;*/
-    /*border-radius: 20px;*/
+    padding: 8px 16px;
+    border-radius: 20px;
     /*box-shadow: 0 1px 3px rgba(0,0,0,0.05);*/
-    /*font-size: 0.95rem;*/
+    font-size: 0.95rem;
 }
+.subjects-list,
 .subject-block input[type="text"],
 .subject-block input[type="number"] {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 999px;
-    background-color: #d3ece9;
-    font-size: 2rem;
-    font-weight: bold;
-    width: 120px;
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    background-color: #e5f8f6;
+    font-size: 1rem;
+    font-weight: normal;
+    width: 180px;
 }
 .alert-warning {
     background: #e5f8f6;
@@ -323,14 +336,14 @@
 }
 .profile-button-row {
     font-family: inherit;
-    gap: 20px;
+    gap: 1rem;
     font-size: 1rem;
     font-weight: 600;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     min-width: 180px;
-    padding: 12px 24px;
+    padding: 12px 12px;
     border-radius: 999px;
     text-decoration: none;
     box-sizing: border-box;
@@ -349,7 +362,97 @@
 .danger-btn {
     background-color: #a33232;
     color: #fff;
+    margin-left: 2rem;
 }
 .danger-btn:hover {
     background-color: #611313;
 }
+
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-list {
+    font-family: inherit;
+    font-size: 0.9rem;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: white;
+    border: 1px solid #ccc;
+    border-top: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    max-height: 200px;
+    overflow-y: auto;
+    border-radius: 0 0 10px 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.autocomplete-item {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.autocomplete-item:hover {
+    background-color: #f0f0f0;
+}
+
+.profile-interest {
+    display: inline-block;
+    background-color: #d3ece9;
+    border-radius: 999px;
+    padding: 6px 18px;
+    margin: 15px 6px 6px 0;
+    font-size: 1.1rem;
+}
+.saved-specialties {
+    margin-top: 40px;
+    animation: slideFadeIn 0.4s ease-out;
+}
+
+.saved-specialty-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.saved-specialty-pill {
+    background-color: #f4fdfc;
+    border: 1px solid #cdebe7;
+    border-radius: 20px;
+    padding: 12px 18px;
+    font-size: 1rem;
+    font-family: 'Anonymous Pro', monospace;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.4;
+    color: #000000;
+}
+
+.saved-specialty-university {
+    font-style: italic;
+    color: #666;
+    font-size: 0.95rem;
+}
+.saved-specialty-pill-link {
+    cursor: pointer;
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.saved-specialty-pill-link:hover {
+    transform: scale(1.03);
+}
+.interests-edit-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    max-width: 100%;
+}
+

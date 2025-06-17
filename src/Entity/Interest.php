@@ -21,7 +21,7 @@ class Interest
     /**
      * @var Collection<int, User>
      */
-    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'interests')]
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'interests')]
     private Collection $users;
 
     public function __construct()

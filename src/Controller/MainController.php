@@ -8,11 +8,14 @@ use App\Entity\News;
 use App\Entity\Specialties;
 use App\Entity\Subject;
 use App\Entity\University;
+use App\Entity\User;
+use App\Repository\UserRepository;
 use App\Service\AuthService;
 use App\Service\FilterService;
 use App\Service\ProfileService;
 use App\Service\RandomNewsService;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,6 +24,8 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
@@ -67,8 +72,31 @@ class MainController extends AbstractController
     }
 
     #[Route('/search', name: 'search', methods: ['GET', 'POST'])]
-    public function search(Request $request, FilterService $filterService, EntityManagerInterface $entityManager, AuthService $authService, SessionInterface $session): Response
+    public function search(Security $security, Request $request,
+                           FilterService $filterService, EntityManagerInterface $entityManager,
+                           AuthService $authService, SessionInterface $session, PaginatorInterface $paginator): Response
     {
+        /** @var User $user */
+        $user = $security->getUser();
+
+        $userSubjects1 = [];
+
+        if ($user) {
+            for ($i = 1; $i <= 4; $i++) {
+                $subjectGetter = 'getSubject' . $i . 'Name';
+                $scoreGetter = 'getSubject' . $i . 'Score';
+
+                $subject = method_exists($user, $subjectGetter) ? $user->$subjectGetter() : null;
+                $score = method_exists($user, $scoreGetter) ? $user->$scoreGetter() : null;
+
+                $userSubjects1[] = [
+                    'subject' => $subject,
+                    'score' => $score,
+                ];
+            }
+        }
+
+
         $subjects = $entityManager->getRepository(Subject::class)->findAll();
         $subjects = array_map(fn(Subject $subject) => $subject->getName(), $subjects);
         $cities = $entityManager->getRepository(City::class)->findAll();
@@ -97,27 +125,34 @@ class MainController extends AbstractController
             }
         }
 
-        $universities = null;
+//        $universities = null;
+        $query = $filterService->getFilteredResults($request);
 
-        if ($request->isMethod('POST') && !empty($userSubjects)) {
-
-            $universities = $filterService->getFilteredResults(
-                $userSubjects,
-                $city,
-                $specialtyName,
-                $priceFrom,
-                $priceTo,
-                $military
-            );
-        }
+        $pagination = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            5
+        );
+//        if ($request->isMethod('POST') && !empty($userSubjects)) {
+//
+//            $universities = $filterService->getFilteredResults(
+//                $userSubjects,
+//                $city,
+//                $specialtyName,
+//                $priceFrom,
+//                $priceTo,
+//                $military
+//            );
+//        }
         $currentUser = $authService->getCurrentUser($session);
         return $this->render('search.html.twig', [
-            'universities' => $universities,
+            'universities' => $pagination,
+//            'universities' => $universities,
             'subjects' => $subjects,
             'cities' => $cities,
             'specialties' => $specialties,
             'selectedSubjects' => $selectedSubjects,
-            'userSubjects' => $userSubjects,
+            'userSubjects' => $userSubjects ?? [],
             'selectedCity' => $city,
             'selectedSpecialty' => $specialtyName,
             'priceFrom' => $priceFrom,
@@ -125,7 +160,15 @@ class MainController extends AbstractController
             'military' => $military,
             'filtersApplied' => $request->isMethod('POST'),
             'currentUser' => $currentUser,
+            'userSubjects1' => $userSubjects1,
+            'user' => $this->getUser()
         ]);
+    }
+    #[Route('/search/reset', name: 'search_reset')]
+    public function resetFilters(SessionInterface $session): Response
+    {
+        $session->remove('filters');
+        return $this->redirectToRoute('search');
     }
     #[Route('/university/{id}', name: 'university_detail')]
     public function universityDetail(University $university, Request $request): Response {
@@ -153,25 +196,23 @@ class MainController extends AbstractController
                 $otherSpecialties[] = $specialty;
             }
         }
-        $backUrl = $this->generateUrl('search', array_filter($request->query->all(), fn($key) => !in_array($key, ['id', 'specialty']), ARRAY_FILTER_USE_KEY));
+        $referer = $request->headers->get('referer');
+        $backUrl = $referer ?: $this->generateUrl('search');
+        $currentFilters = $request->query->all();
         return $this->render('university_detail.html.twig', [
             'university' => $university,
             'selectedSpecialty' => $selectedSpecialty,
+            'currentFilters' => $currentFilters,
             'otherSpecialties' => $otherSpecialties,
             'userSubjects' => $subjectNames,
             'userScores' => $userScores,
-            'backUrl' => $backUrl
+            'backUrl' => $backUrl,
+            'user' => $this->getUser(),
         ]);
     }
     #[Route('/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils, Request $request): Response
     {
-        $session = $request->getSession();
-        $referer = $request->headers->get('referer');
-
-        if ($referer && !str_contains($referer, '/login')) {
-            $session->set('_security.main.target_path', $referer);
-        }
         return $this->render('auth.html.twig', [
             'last_username' => $authenticationUtils->getLastUsername(),
             'error' => $authenticationUtils->getLastAuthenticationError(),
@@ -181,18 +222,19 @@ class MainController extends AbstractController
     #[Route('/logout', name: 'app_logout')]
     public function logout(): void
     {
-        // Symfony обробляє logout автоматично — тут нічого не потрібно
+
     }
 
     #[Route('/register', name: 'register')]
-    public function register(Request $request, AuthService $authService): Response
+    public function register(SessionInterface $session, Request $request, AuthService $authService): Response
     {
+//        $email = $request->request->get('email');
         if ($request->isMethod('POST')) {
             $email = $request->request->get('email');
             $password = $request->request->get('password');
 
             if ($email && $password) {
-                $authService->register($email, $password);
+                $authService->register($session,$email, $password);
                 return $this->redirectToRoute('profile');
             }
 
@@ -204,7 +246,7 @@ class MainController extends AbstractController
 
     #[Route('/profile', name: 'profile')]
     #[IsGranted('ROLE_USER')]
-    public function profile(Request $request, Security $security, EntityManagerInterface $em, ProfileService $profileService): Response
+    public function profile(Request $request, Security $security, ProfileService $profileService): Response
     {
         $user = $security->getUser();
         $mustEdit = empty($user->getFullName()) || empty($user->getPhone()) || empty($user->getAbout());
@@ -216,70 +258,58 @@ class MainController extends AbstractController
         } else {
             $editMode = !$profileService->isProfileComplete($user);
         }
-
-        $allInterests = $em->getRepository(Interest::class)->findAll();
+        $avatarUrl = $profileService->getAvatarUrl(
+            $user->getAvatar(),
+            $user->getAvatarStyle()
+        );
 
         return $this->render('profile.html.twig', [
             'user' => $user,
+            'avatarUrl' => $avatarUrl,
             'editMode' => $editMode,
             'showAlert' => !$profileService->isProfileComplete($user),
-            'allInterests' => $allInterests
+            'user_allInterests' => $user->getInterests(),
+            'allInterests' => $profileService->getAllInterests(),
+            'favoriteSpecialties' => $user->getFavoriteSpecialties(),
         ]);
     }
 
     #[Route('/profile/save', name: 'profile_save', methods: ['POST'])]
-    public function saveProfile(Request $request, EntityManagerInterface $em, Security $security): Response
+    public function saveProfile(Request $request, ProfileService $profileService, Security $security): Response
     {
-        /** @var \App\Entity\User $user */
         $user = $security->getUser();
-
-        $user->setFullName($request->get('full_name'));
-        $user->setPhone($request->get('phone'));
-        $user->setAbout($request->get('about'));
-
-        // Фото
-        $photoFile = $request->files->get('photo');
-        if ($photoFile) {
-            $filename = uniqid() . '.' . $photoFile->guessExtension();
-            $photoFile->move('uploads/photos', $filename);
-            $user->setAvatar('uploads/photos/' . $filename);
+        $profileService->updateProfile($request);
+        if (!$user->getAvatar()) {
+            $user->setAvatar('coolFox' . random_int(10, 99));
         }
 
-        // Інтереси
-        $interestIds = $request->get('interests', []);
-        $interests = $em->getRepository(Interest::class)->findBy(['id' => $interestIds]);
-
-        $user->getInterests()->clear();
-        foreach ($interests as $interest) {
-            $user->addInterest($interest);
+        if (!$user->getAvatarStyle()) {
+            $user->setAvatarStyle('bottts');
         }
 
+        $avatarUrl = $profileService->getAvatarUrl(
+            $user->getAvatar(),
+            $user->getAvatarStyle()
+        );
 
-        for ($i = 1; $i <= 4; $i++) {
-        $name = $request->request->get("subject{$i}_name");
-        $score = $request->request->get("subject{$i}_score");
-
-        if ($name && $score) {
-            $setterName = "setSubject{$i}Name";
-            $setterScore = "setSubject{$i}Score";
-
-            $user->$setterName($name);
-            $user->$setterScore((int)$score);
-        }
-    }
-
-
-
-        $em->persist($user);
-        $em->flush();
-
-        return $this->redirectToRoute('profile',  ['edit' => 0]);
+        $this->addFlash('success', 'Профіль успішно оновлено!');
+        return $this->redirectToRoute('profile',  [
+            'edit' => 0,
+            'avatarUrl' => $avatarUrl,
+        ]);
     }
     #[Route('/account/delete', name: 'delete_account', methods: ['POST'])]
-    public function deleteAccount(EntityManagerInterface $em, Security $security): Response
+    public function deleteAccount(SessionInterface $session, EntityManagerInterface $em, Security $security, TokenStorageInterface $tokenStorage,): Response
     {
-        $user = $security->getUser();
 
+        $user = $security->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $user->getInterests()->clear();
+        $tokenStorage->setToken(null);
+        $session->invalidate();
         $em->remove($user);
         $em->flush();
 
@@ -288,6 +318,7 @@ class MainController extends AbstractController
     #[Route('/news', name: 'news')]
     public function news(AuthService $authService, SessionInterface $session, RandomNewsService $randomNewsService): Response
     {
+
         $currentUser = $authService->getCurrentUser($session);
         $newsList = $randomNewsService->getRandomNews(6);
         return $this->render('news.html.twig', [
@@ -346,21 +377,24 @@ class MainController extends AbstractController
 
         return $this->json($names);
     }
-    #[Route('/interests/autocomplete', name: 'interests_autocomplete')]
-    public function autocompleteInterest(Request $request, EntityManagerInterface $em): JsonResponse
-    {
-        $query = $request->query->get('q');
-        $results = $em->createQueryBuilder('s')
-            ->select('DISTINCT s.name')
-            ->from(Interest::class, 's')
-            ->where('LOWER(s.name) LIKE :q')
-            ->setParameter('q', mb_strtolower($query) . '%')
-            ->setMaxResults(20)
-            ->getQuery()
-            ->getScalarResult();
+    #[Route('/specialty/{id}/toggle-favorite', name: 'toggle_favorite_specialty', methods: ['POST'])]
+    public function toggleFavorite(Specialties $specialty, EntityManagerInterface $em, Security $security): JsonResponse {
+        /** @var User $user */
+        $user = $security->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
 
-        $names = array_column($results, 'name');
+        if ($user->getFavoriteSpecialties()->contains($specialty)) {
+            $user->removeFavoriteSpecialty($specialty);
+            $isFav = false;
+        } else {
+            $user->addFavoriteSpecialty($specialty);
+            $isFav = true;
+        }
 
-        return $this->json($names);
+        $em->flush();
+
+        return new JsonResponse(['favorite' => $isFav]);
     }
 }

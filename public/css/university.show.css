@@ -92,3 +92,7 @@
 .back-button:hover {
     background-color: #ddd;
 }
+.star-icon:hover {
+    fill: #ffea70 !important;
+    transition: fill 0.2s ease-in-out;
+}

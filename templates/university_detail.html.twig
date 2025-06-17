@@ -6,9 +6,20 @@
 {% endblock %}
 
 {% block content %}
-    <a href="{{ backUrl }}" class="back-button">← Повернутись до результатів</a>
-<section class="university-detail">
-  <h1>{{ university.name }}</h1>
+    <a href="{{ backUrl }}" class="back-button">← Повернутись</a>
+    <section class="university-detail">
+        <svg class="star-icon"
+             data-id="{{ selectedSpecialty.id }}"
+             data-favorite="{{ app.user.favoriteSpecialties.contains(selectedSpecialty.name) ? 'true' : 'false' }}"
+             xmlns="http://www.w3.org/2000/svg"
+             width="24" height="24" viewBox="0 0 24 24"
+             fill="{{ app.user.favoriteSpecialties.contains(selectedSpecialty.name) ? '#ffc107' : 'none' }}"
+             stroke="#ffc107" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"
+             style="cursor: pointer; margin-left: 8px;">
+            <polygon points="12 2 15 8.5 22 9.3 17 14.1 18.5 21 12 17.8 5.5 21 7 14.1 2 9.3 9 8.5 12 2"/>
+        </svg>
+    <h1>{{ university.name }}</h1>
 
   <div class="description">{{ university.description }}</div>
     <p class="city">Місто: {{ university.city.name }}, {{ university.city.region.name }} область</p>
@@ -38,6 +49,56 @@
     {% endfor %}
   </div>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.uni-title .star-icon').forEach(star => {
+                    star.addEventListener('click', function (e) {
+                        e.stopPropagation();
 
+                        const id = this.dataset.id;
+                        const isFavorite = this.dataset.favorite === 'true';
+
+                        fetch(`/specialty/${id}/toggle-favorite`, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                this.dataset.favorite = data.favorite;
+                                this.setAttribute('fill', data.favorite ? '#ffc107' : 'none');
+                            });
+                    });
+                });
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const star = document.querySelector('.star-icon');
+                if (!star) return;
+
+                star.addEventListener('click', function (e) {
+                    e.stopPropagation();
+
+                    const id = this.dataset.id;
+                    const isFavorite = this.dataset.favorite === 'true';
+
+                    fetch(`/specialty/${id}/toggle-favorite`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.dataset.favorite = data.favorite;
+                            this.setAttribute('fill', data.favorite ? '#ffc107' : 'none');
+                        });
+                });
+            });
+        </script>
 </section>
 {% endblock %}

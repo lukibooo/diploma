@@ -140,9 +140,9 @@ class LoadDataCommand extends Command
 //        }
 //
 //        $this->entityManager->flush();
-
 //
-
+//
+//
 //        $file = fopen(__DIR__ . '/../../public/All.csv', 'r');
 //        fgetcsv($file, 1000, ',');
 //        fgetcsv($file, 1000, ',');
@@ -236,32 +236,125 @@ class LoadDataCommand extends Command
 //        $this->entityManager->flush();
 //        $io->success('Loaded');
 //
-        $file = fopen(__DIR__ . '/../../public/News.csv', 'r');
+//        $file = fopen(__DIR__ . '/../../public/News.csv', 'r');
+//
+//        $lineNumber = 0;
+//
+//        while (($data = fgetcsv($file)) !== false) {
+//            $lineNumber++;
+//            if ($lineNumber === 1) {
+//                continue;
+//            }
+//
+//            $title = $data[0];
+//            $description = $data[1];
+//            $date = $data[2];
+//
+//            $news = new News();
+//            $news->setTitle($title);
+//            $news->setContent($description);
+//            $news->setPublishedAt($date);
+//
+//            $this->entityManager->persist($news);
+//        }
+//
+//        $this->entityManager->flush();
+//        fclose($file);
+//
+//        $io->success('Loaded');
+//        return self::SUCCESS;
+//    }
 
-        $lineNumber = 0;
+        $subjectRepo = $this->entityManager->getRepository(Subject::class);
+        $specialtyRepo = $this->entityManager->getRepository(Specialties::class);
 
-        while (($data = fgetcsv($file)) !== false) {
-            $lineNumber++;
-            if ($lineNumber === 1) {
+        // Карта предметів: trimmed name → Subject
+        $subjects = $subjectRepo->findAll();
+        $subjectMap = [];
+        foreach ($subjects as $subject) {
+            $subjectMap[trim($subject->getName())] = $subject;
+        }
+
+        // Карта спеціальностей: trimmed code → [Specialty, Specialty, ...]
+        $specialties = $specialtyRepo->findAll();
+        $specialtiesByCode = [];
+        foreach ($specialties as $s) {
+            $specialtiesByCode[trim($s->getCode())][] = $s;
+        }
+
+        $file = fopen(__DIR__ . '/../../public/Coef.csv', 'r');
+        if (!$file) {
+            $output->writeln('<error>Не вдалося відкрити All.csv</error>');
+            return Command::FAILURE;
+        }
+
+        $headers = fgetcsv($file, 0, ',');
+        $headers = array_map('trim', array_slice($headers, 1)); // без "Code"
+
+        $created = 0;
+        $skipped = 0;
+
+        while (($row = fgetcsv($file, 0, ',')) !== false) {
+            $code = trim($row[0]);
+            if ($code === '') {
+                $skipped++;
                 continue;
             }
 
-            $title = $data[0];
-            $description = $data[1];
-            $date = $data[2];
+            $values = array_slice($row, 1);
 
-            $news = new News();
-            $news->setTitle($title);
-            $news->setContent($description);
-            $news->setPublishedAt($date);
+            if (!isset($specialtiesByCode[$code])) {
+                $output->writeln("⛔ Спеціальність з кодом [$code] не знайдена.");
+                $skipped++;
+                continue;
+            }
 
-            $this->entityManager->persist($news);
+            foreach ($specialtiesByCode[$code] as $specialty) {
+                foreach ($values as $i => $rawValue) {
+                    $value = str_replace(',', '.', trim($rawValue));
+                    if (!is_numeric($value)) {
+                        continue;
+                    }
+
+                    $subjectName = $headers[$i] ?? null;
+                    $subject = $subjectMap[$subjectName] ?? null;
+
+                    if (!$subject) {
+                        $output->writeln("⚠️ Пропущено предмет: [$subjectName]");
+                        continue;
+                    }
+
+                    $number = new Number();
+                    $number->setSpecialty($specialty);
+                    $number->setSubject($subject);
+                    $number->setValue((float)$value);
+
+                    $this->entityManager->persist($number);
+                    $created++;
+
+                    if ($created % 1000 === 0) {
+                        $this->entityManager->flush();
+                        $output->writeln("🔄 $created записів збережено...");
+                        foreach ($this->entityManager->getUnitOfWork()->getIdentityMap()[Number::class] ?? [] as $persisted) {
+                            $this->entityManager->detach($persisted);
+                        }
+                    }
+                }
+            }
         }
 
-        $this->entityManager->flush();
         fclose($file);
+        $this->entityManager->flush();
+        foreach ($this->entityManager->getUnitOfWork()->getIdentityMap()[Number::class] ?? [] as $persisted) {
+            $this->entityManager->detach($persisted);
+        }
 
-        $io->success('Loaded');
-        return self::SUCCESS;
+        $output->writeln("<info>✅ Імпорт завершено: додано $created звʼязків.</info>");
+        if ($skipped > 0) {
+            $output->writeln("<comment>⚠️ Пропущено $skipped рядків (порожні або без збігу).</comment>");
+        }
+
+        return Command::SUCCESS;
     }
+
 }

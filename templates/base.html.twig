@@ -25,7 +25,7 @@
                            class="{% if app.request.attributes.get('_route') == 'about' %}active{% endif %}">Про наc</a></li>
                     <li><a href="{{ path('search') }}"
                            class="{% if app.request.attributes.get('_route') starts with 'search' or app.request.attributes.get('_route') starts with 'university' %}active{% endif %}">Пошук</a></li>
-                    <li><a href="{{ path(currentUser ? 'profile' : 'app_login') }}"
+                    <li><a href="{{ path('profile') }}"
                            class="{% if app.request.attributes.get('_route') == 'profile' %}active{% endif %}">Профіль</a></li>
                     <li><a href="{{ path('news') }}"
                            class="{% if app.request.attributes.get('_route') == 'news' %}active{% endif %}">Новини</a></li>
@@ -114,7 +114,13 @@
                 linkToActivate = Array.from(links).find(link => link.href.includes('/search'));
             } else if (lastPage.includes('/news')) {
                 linkToActivate = Array.from(links).find(link => link.href.includes('/news'));
+            } else if (lastPage.includes('/profile')) {
+                linkToActivate = Array.from(links).find(link => link.href.includes('/profile'));
             } else if (currentRoute.includes('/university')) {
+                linkToActivate = Array.from(links).find(link => link.href.includes('/search'));
+            } else if (currentRoute.includes('/show/news')) {
+                linkToActivate = Array.from(links).find(link => link.href.includes('/news'));
+            }else if (currentRoute.includes('/university')) {
                 linkToActivate = Array.from(links).find(link => link.href.includes('/search'));
             } else if (currentRoute.includes('/show/news')) {
                 linkToActivate = Array.from(links).find(link => link.href.includes('/news'));

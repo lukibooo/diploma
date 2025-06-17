@@ -3,18 +3,23 @@
 
 namespace App\Service;
 
+use App\Entity\Interest;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class ProfileService
 {
-    public function __construct(private EntityManagerInterface $em, private Security $security) {}
+    public function __construct(private EntityManagerInterface $em, private Security $security, ParameterBagInterface $params) {
+    }
 
     public function updateProfile(Request $request): void
     {
+        /** @var \App\Entity\User $user */
         $user = $this->security->getUser();
         if (!$user) {
             return;
@@ -25,7 +30,7 @@ class ProfileService
         $user->setAbout($request->request->get('about'));
 
 
-        $interestIds = $request->request->get('interests', []);
+        $interestIds = $request->request->all('interests');
         if (!is_array($interestIds)) {
             $interestIds = [];
         }
@@ -35,7 +40,6 @@ class ProfileService
         foreach ($interests as $interest) {
             $user->addInterest($interest);
         }
-
         for ($i = 1; $i <= 4; $i++) {
             $name = $request->request->get("subject{$i}_name");
             $score = $request->request->get("subject{$i}_score");
@@ -48,19 +52,18 @@ class ProfileService
                 $user->$setterScore((int)$score);
             }
         }
+        $avatar = $request->request->get('avatar'); // seed
+        $avatarStyle = $request->request->get('avatar_style');
 
-        $avatar = $request->files->get('avatar');
-        if ($avatar) {
-            $filename = uniqid() . '.' . $avatar->guessExtension();
-            $avatar->move(__DIR__ . '/../../public/uploads/avatars', $filename);
-            $user->setAvatar($filename);
+        if ($avatar && $avatarStyle) {
+            $user->setAvatar($avatar);
+            $user->setAvatarStyle($avatarStyle);
         }
 
-        $this->em->persist($user);
         $this->em->flush();
-
     }
-    public function isProfileComplete(User $user): bool
+
+    public function isProfileComplete(UserInterface $user): bool
     {
         return $user->getFullName() &&
             $user->getPhone() &&
@@ -69,5 +72,16 @@ class ProfileService
             $user->getSubject2Name() && $user->getSubject2Score() &&
             $user->getSubject3Name() && $user->getSubject3Score() &&
             $user->getSubject4Name() && $user->getSubject4Score();
+    }
+    public function getAvatarUrl(?string $seed, string $style = 'bottts', int $size = 200): ?string
+    {
+        if (!$seed) {
+            return null;
+        }
+        return "https://api.dicebear.com/7.x/{$style}/svg?seed=" . urlencode($seed) . "&size={$size}";
+    }
+    public function getAllInterests(): array
+    {
+        return $this->em->getRepository(Interest::class)->findAll();
     }
 }

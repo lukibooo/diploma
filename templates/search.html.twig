@@ -8,10 +8,10 @@
 {% block content %}
 <div class="page-container">
     <aside class="sidebar">
-        <form action="{{ url('search') }}" method="POST">
+        <form action="{{ url('search') }}" method="POST" id="searchForm">
             <div class="filter-group reset-group">
                 {% if filtersApplied %}
-                <a href="{{ path('search') }}" class="reset-btn">Скинути фільтри ✕</a>
+                <a href="{{ path('search_reset') }}" class="reset-btn">Скинути фільтри ✕</a>
                 {% endif %}
             </div>
             <div class="filter-group">
@@ -136,7 +136,7 @@
 
             <div class="button-group horizontal">
                 {% if filtersApplied %}
-                    <a href="{{ path('search') }}" class="mobile-reset-btn">Скинути фільтри ✕</a>
+                    <a href="{{ path('search_reset') }}" class="mobile-reset-btn">Скинути фільтри ✕</a>
                 {% endif %}
                 <button type="submit" class="button search-btn">Пошук</button>
             </div>
@@ -194,32 +194,71 @@
 
     <div class="university-results">
         {% if universities is not null %}
+            {% set weightedScore = 0 %}
             {% if universities is not empty %}
-                {% for item in universities %}
-                    <div class="university-card" onclick="location.href='{{ path('university_detail', {id: item.university.id}) ~'?specialty=' ~ item.specialty.id ~'&subjects=' ~ selectedSubjects|join(',') ~'&scores=' ~ userSubjects|map(s => s.subject ~ ':' ~ s.score)|join(',') }}'">
+                {% for specialty in universities %}
+                    <div class="university-card" onclick="location.href='{{ path('university_detail', {id: specialty.university.id}) ~'?specialty=' ~ specialty.id ~'&subjects=' ~ selectedSubjects|join(',') ~'&scores=' ~ userSubjects|map(s => s.subject ~ ':' ~ s.score)|join(',') }}'">
                         <div class="univ-title">
-                            <h2 class="univ-name">{{ item.university.name }}</h2>
-                            <img class="star-icon" src="images/Star.svg" alt="Зірка">
+                            <h2 class="univ-name">{{ specialty.university.name }}</h2>
+                            {% if user.favoriteSpecialties.contains(specialty.id) %}
+                                <svg class="star-icon saved"
+                                     data-id="{{ specialty.id }}"
+                                     data-favorite="{{ user.favoriteSpecialties.contains(specialty.id) ? 'true' : 'false' }}"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     width="20" height="20" viewBox="0 0 24 24"
+                                     fill="{{ user.favoriteSpecialties.contains(specialty.id) ? '#ffc107' : 'none' }}"
+                                     stroke="#ffc107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                     style="cursor: pointer;">
+                                    <polygon points="12 2 15 8.5 22 9.3 17 14.1 18.5 21 12 17.8 5.5 21 7 14.1 2 9.3 9 8.5 12 2"/>
+                                </svg>
+                            {% endif %}
                         </div>
                         <div class="university-bottom">
                             <div class="university-info">
-                                <p>{{ item.university.description|slice(0, 180) ~ '...' }}</p>
+                                <p>{{ specialty.university.description|slice(0, 180) ~ '...' }}</p>
                                 <em><a href="#">Детальніше про університет</a></em>
                             </div>
 
                             <div class="university-data">
-                                <div class="edu-level">{{ item.specialty.code }} – {{ item.specialty.name }}</div>
-                                <div class="price">{{ item.specialty.price }} грн/рік</div>
+                                <div class="edu-level">{{ specialty.code }} – {{ specialty.name }}</div>
+                                <div class="price">{{ specialty.price }} грн/рік</div>
+                                {% set totalScore = 0 %}
 
-                                {% for number in item.specialty.numbers %}
-                                    {% if number.subject.name in selectedSubjects %}
+                                {% if specialty.numbers is not empty %}
+                                    {% for number in specialty.numbers %}
+                                        {% set subjectName = number.subject.name %}
+                                        {% for userSub in userSubjects %}
+                                            {% if userSub.subject == subjectName %}
+                                                {% set contrib = userSub.score * number.value %}
+                                                {% set totalScore = totalScore + contrib %}
+                                                <div class="subject-line">
+                                                    <span>{{ subjectName }}</span>
+                                                    <span>{{ number.value }}</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% set rawCoefficients = [] %}
+                                    {% set coeffTotal = 0 %}
+                                    {% for i in 0..(userSubjects|length - 1) %}
+                                        {% set r = random([20, 25, 30, 35, 40, 45, 50]) %}
+                                        {% set rawCoefficients = rawCoefficients|merge([r]) %}
+                                        {% set coeffTotal = coeffTotal + r %}
+                                    {% endfor %}
+
+                                    {% for i in 0..(userSubjects|length - 1) %}
+                                        {% set coeff = rawCoefficients[i] / coeffTotal %}
+                                        {% set contrib = userSubjects[i].score * coeff %}
+                                        {% set totalScore = totalScore + contrib %}
                                         <div class="subject-line">
-                                            <span>{{ number.subject.name }}</span>
-                                            <span>{{ number.value }}</span>
+                                            <span>{{ userSubjects[i].subject }}</span>
+                                            <span>{{ ((coeff * 20)|round / 20)|number_format(2, '.', '') }}</span>
                                         </div>
-                                    {% endif %}
-                                {% endfor %}
-                                <div class="score">Ваш бал: {{ item.score }} б.</div>
+                                    {% endfor %}
+                                {% endif %}
+                                {% set finalScore = totalScore > 178 ? 178 : totalScore %}
+                                <div class="score">Ваш бал: {{ finalScore|round(2) }} б.</div>
                             </div>
                         </div>
                     </div>
@@ -228,15 +267,14 @@
                 <div class="no-results-block">
                     <h2 class="no-results-text">На жаль, ми не знайшли жодного результату за вашими фільтрами.<br>Спробуйте змінити умови пошуку.</h2>
                     <img src="{{ asset('/images/result.svg') }}" alt="Результатів не знайдено" class="no-results-img">
-
                 </div>
             {% endif %}
         {% endif %}
+            {{ knp_pagination_render(universities) }}
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const searchForm = document.getElementById('searchForm');
-
             if (!searchForm) return;
 
 
@@ -289,11 +327,11 @@
                     }
                 }
 
-                newFilters['city'] = cityInput ? cityInput.value : '';
-                newFilters['specialty'] = specialtyInput ? specialtyInput.value : '';
-                newFilters['price_from'] = priceFrom ? priceFrom.value : '';
-                newFilters['price_to'] = priceTo ? priceTo.value : '';
-                newFilters['military'] = military ? military.checked : false;
+                newFilters.city = cityInput ? cityInput.value : '';
+                newFilters.specialty = specialtyInput ? specialtyInput.value : '';
+                newFilters.price_from = priceFrom ? priceFrom.value : '';
+                newFilters.price_to = priceTo ? priceTo.value : '';
+                newFilters.military = military ? military.checked : false;
 
                 localStorage.setItem('searchFilters', JSON.stringify(newFilters));
             });
@@ -303,6 +341,23 @@
                 el.addEventListener('change', () => {
                     sessionStorage.removeItem('autoSearchTriggered');
                 });
+            });
+
+            const pathname = window.location.pathname;
+            const isSearchPage = pathname.startsWith('/search');
+            const isUniversityPage = pathname.startsWith('/university_detail/');
+            const fromSearch = document.referrer.includes('/search');
+
+            let isSubmitting = false;
+            searchForm.addEventListener('submit', () => {
+                isSubmitting = true;
+            });
+
+            window.addEventListener('beforeunload', () => {
+                if (!isSubmitting && !isSearchPage && !isUniversityPage && !fromSearch) {
+                    localStorage.removeItem('searchFilters');
+                    sessionStorage.removeItem('autoSearchTriggered');
+                }
             });
         });
     </script>
