@@ -108,7 +108,6 @@ class MainController extends AbstractController
         $priceFrom = $request->get('price_from') ? (int) $request->get('price_from') : null;
         $priceTo = $request->get('price_to') ? (int) $request->get('price_to') : null;
         $military = $request->request->filter('military', false, FILTER_VALIDATE_BOOLEAN);
-
         $selectedSubjects = [];
         $userSubjects = [];
 
@@ -127,11 +126,10 @@ class MainController extends AbstractController
 
 //        $universities = null;
         $query = $filterService->getFilteredResults($request);
-
         $pagination = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1),
-            5
+            1
         );
 //        if ($request->isMethod('POST') && !empty($userSubjects)) {
 //
@@ -152,7 +150,7 @@ class MainController extends AbstractController
             'cities' => $cities,
             'specialties' => $specialties,
             'selectedSubjects' => $selectedSubjects,
-            'userSubjects' => $userSubjects ?? [],
+            'userSubjects' => $userSubjects,
             'selectedCity' => $city,
             'selectedSpecialty' => $specialtyName,
             'priceFrom' => $priceFrom,

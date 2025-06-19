@@ -1,0 +1,17 @@
+<h2>Скидання паролю на платформі «Навчайся»</h2>
+
+<p>Вітаємо!</p>
+
+<p>Ми отримали запит на скидання вашого паролю. Щоб встановити новий пароль, перейдіть за посиланням нижче:</p>
+
+<p>
+    <a href="{{ url('app_reset_password', {token: resetToken.token}) }}">
+        {{ url('app_reset_password', {token: resetToken.token}) }}
+    </a>
+</p>
+
+<p>Це посилання буде дійсне протягом {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.</p>
+
+<p>Якщо ви не надсилали цей запит, просто проігноруйте цей лист — ваш пароль залишиться без змін.</p>
+
+<p>З повагою,<br>Команда «Навчайся»</p>

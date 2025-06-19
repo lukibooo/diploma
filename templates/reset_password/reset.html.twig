@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reset your password{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/auth-registr.css') }}">
+{% endblock %}
+{% block content %}
+    <div class="auth-container">
+        <h2>Новий пароль</h2>
+
+        {{ form_start(resetForm) }}
+        {{ form_widget(resetForm.plainPassword, {'attr': {'class': 'auth-input'}}) }}
+        <button class="auth-btn">Змінити пароль</button>
+        {{ form_end(resetForm) }}
+
+        <div class="auth-footer" style="margin-top: 24px;">
+            <a href="{{ path('app_login') }}">Повернутися до входу</a>
+        </div>
+    </div>
+{% endblock %}

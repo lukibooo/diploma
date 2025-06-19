@@ -11,7 +11,7 @@
         <form action="{{ url('search') }}" method="POST" id="searchForm">
             <div class="filter-group reset-group">
                 {% if filtersApplied %}
-                <a href="{{ path('search_reset') }}" class="reset-btn">Скинути фільтри ✕</a>
+                <a href="{{ path('search_reset') }}" id="resetFilters" class="mobile-reset-btn">Скинути фільтри ✕</a>
                 {% endif %}
             </div>
             <div class="filter-group">
@@ -56,12 +56,12 @@
                 </div>
             </div>
 
-            <div class="filter-group">
-                <label>
-                    <input type="checkbox" name="military" {% if military %}checked{% endif %}>
-                    Військова кафедра
-                </label>
-            </div>
+{#            <div class="filter-group">#}
+{#                <label>#}
+{#                    <input type="checkbox" name="military" {% if military %}checked{% endif %}>#}
+{#                    Військова кафедра#}
+{#                </label>#}
+{#            </div>#}
             <div class="filter-group">
                 <button type="submit" class="search-btn">Пошук</button>
             </div>
@@ -127,12 +127,12 @@
                 </div>
             </div>
 
-            <div class="filter-group">
-                <label>
-                    <input type="checkbox" name="military" {% if military %}checked{% endif %}>
-                    Військова кафедра
-                </label>
-            </div>
+{#            <div class="filter-group">#}
+{#                <label>#}
+{#                    <input type="checkbox" name="military" {% if military %}checked{% endif %}>#}
+{#                    Військова кафедра#}
+{#                </label>#}
+{#            </div>#}
 
             <div class="button-group horizontal">
                 {% if filtersApplied %}
@@ -193,13 +193,17 @@
     </div>
 
     <div class="university-results">
-        {% if universities is not null %}
+        {% if universities is not null and universities is not empty %}
             {% set weightedScore = 0 %}
+
             {% if universities is not empty %}
                 {% for specialty in universities %}
-                    <div class="university-card" onclick="location.href='{{ path('university_detail', {id: specialty.university.id}) ~'?specialty=' ~ specialty.id ~'&subjects=' ~ selectedSubjects|join(',') ~'&scores=' ~ userSubjects|map(s => s.subject ~ ':' ~ s.score)|join(',') }}'">
+                {% for university in specialty.universities %}
+
+                    <div class="university-card" onclick="location.href='{{ path('university_detail', {id: university.id}) ~ '?specialty=' ~ specialty.id ~ '&subjects=' ~ selectedSubjects|join(',') ~ '&scores=' ~ userSubjects|map(s => s.subject ~ ':' ~ s.score)|join(',') }}'">
                         <div class="univ-title">
-                            <h2 class="univ-name">{{ specialty.university.name }}</h2>
+                            <h2 class="univ-name">{{ university.name }}</h2>
+
                             {% if user.favoriteSpecialties.contains(specialty.id) %}
                                 <svg class="star-icon saved"
                                      data-id="{{ specialty.id }}"
@@ -213,29 +217,38 @@
                                 </svg>
                             {% endif %}
                         </div>
+
                         <div class="university-bottom">
                             <div class="university-info">
-                                <p>{{ specialty.university.description|slice(0, 180) ~ '...' }}</p>
+                                <p>{{ university.description|slice(0, 180) ~ '...' }}</p>
                                 <em><a href="#">Детальніше про університет</a></em>
                             </div>
 
                             <div class="university-data">
                                 <div class="edu-level">{{ specialty.code }} – {{ specialty.name }}</div>
-                                <div class="price">{{ specialty.price }} грн/рік</div>
+
+                                {% for offer in specialty.specialtyPrice %}
+                                    {% if offer.university.id == university.id %}
+                                        <div class="price">{{ offer.price }} грн/рік</div>
+                                    {% endif %}
+                                {% endfor %}
+
                                 {% set totalScore = 0 %}
 
                                 {% if specialty.numbers is not empty %}
                                     {% for number in specialty.numbers %}
-                                        {% set subjectName = number.subject.name %}
-                                        {% for userSub in userSubjects %}
-                                            {% if userSub.subject == subjectName %}
-                                                {% set contrib = userSub.score * number.value %}
-                                                {% set totalScore = totalScore + contrib %}
-                                                <div class="subject-line">
-                                                    <span>{{ subjectName }}</span>
-                                                    <span>{{ number.value }}</span>
-                                                </div>
-                                            {% endif %}
+                                        {% for subj in number.subjects %}
+                                            {% set subjectName = subj.name %}
+                                            {% for userSub in userSubjects %}
+                                                {% if userSub.subject == subjectName %}
+                                                    {% set contrib = userSub.score * number.value %}
+                                                    {% set totalScore = totalScore + contrib %}
+                                                    <div class="subject-line">
+                                                        <span>{{ subjectName }}</span>
+                                                        <span>{{ number.value }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
                                         {% endfor %}
                                     {% endfor %}
                                 {% else %}
@@ -257,11 +270,13 @@
                                         </div>
                                     {% endfor %}
                                 {% endif %}
+
                                 {% set finalScore = totalScore > 178 ? 178 : totalScore %}
                                 <div class="score">Ваш бал: {{ finalScore|round(2) }} б.</div>
                             </div>
                         </div>
                     </div>
+                {% endfor %}
                 {% endfor %}
             {% else %}
                 <div class="no-results-block">
@@ -270,7 +285,8 @@
                 </div>
             {% endif %}
         {% endif %}
-            {{ knp_pagination_render(universities) }}
+
+        {{ knp_pagination_render(universities) }}
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -361,6 +377,11 @@
             });
         });
     </script>
-
+    <script>
+        document.getElementById('resetFilters')?.addEventListener('click', () => {
+            localStorage.removeItem('searchFilters');
+            sessionStorage.removeItem('autoSearchTriggered');
+        });
+    </script>
 </div>
 {% endblock %}

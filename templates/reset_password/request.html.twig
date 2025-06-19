@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reset your password{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/auth-registr.css') }}">
+{% endblock %}
+{% block content %}
+    <div class="auth-container">
+        <h2>Скидання паролю</h2>
+
+        {% for flash_error in app.flashes('reset_password_error') %}
+            <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
+        {% endfor %}
+
+        {{ form_start(requestForm) }}
+        {{ form_widget(requestForm.email, {'attr': {'class': 'auth-input'}}) }}
+        <button class="auth-btn">Надіслати лист</button>
+        {{ form_end(requestForm) }}
+
+        <div class="auth-footer" style="margin-top: 24px;">
+            <a href="{{ path('app_login') }}">Повернутися до входу</a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Password Reset Email Sent{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/auth-registr.css') }}">
+{% endblock %}
+{% block content %}
+    <div class="auth-container">
+        <h2 style="line-height: 1.7; font-size: 2.5rem;">Лист надіслано</h2>
+        <p style="line-height: 1.7; font-size: 1.5rem;">
+            Якщо акаунт з цією адресою існує, ми надіслали лист для скидання паролю.<br>
+            Посилання дійсне протягом {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.
+        </p>
+        <p>
+            Не отримали лист? <a href="{{ path('app_forgot_password_request') }}">Спробуйте ще раз</a>
+        </p>
+    </div>
+{% endblock %}

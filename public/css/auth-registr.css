@@ -106,3 +106,24 @@
         padding: 10px 20px;
     }
 }
+.secondary-btn {
+    background-color: transparent;
+    color: #3b8782;
+    border: 1px solid #000000;
+    padding: 8px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.secondary-btn:hover {
+    background-color: #000000;
+    color: #ffffff;
+}
+.alert-danger {
+    background: #ffcccc;
+    color: #990000;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+}

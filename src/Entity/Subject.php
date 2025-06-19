@@ -17,7 +17,7 @@ class Subject
 
     #[ORM\Column(length: 200)]
     private ?string $name = null;
-    #[ORM\OneToMany(targetEntity: Number::class, mappedBy: "subject")]
+    #[ORM\ManyToMany(targetEntity: Number::class, mappedBy: 'subjects')]
     private Collection $numbers;
 
     public function __construct()

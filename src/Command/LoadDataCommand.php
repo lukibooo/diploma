@@ -8,6 +8,7 @@ use App\Entity\News;
 use App\Entity\Number;
 use App\Entity\Region;
 use App\Entity\Specialties;
+use App\Entity\SpecialtyPrice;
 use App\Entity\Subject;
 use App\Entity\University;
 use Doctrine\ORM\EntityManagerInterface;
@@ -108,40 +109,10 @@ class LoadDataCommand extends Command
 //            $this->entityManager->persist($university);
 //        }
 //        $this->entityManager->flush();
+//
+//
 
-//        $file = fopen(__DIR__ . '/../../public/Specialt.csv', 'r');
-//
-//        $lineNumber = 0;
-//
-//        while (($data = fgetcsv($file))) {
-//            $lineNumber++;
-//            if ($lineNumber === 1) continue;
-//
-//            $universityName = trim($data[0]);
-//            $specName = trim($data[4]);
-//            $specCode = trim($data[3]);
-//            $description = trim($data[5]);
-//            $price = $data[6];
-//
-//            $university = $this->entityManager
-//                ->getRepository(University::class)
-//                ->findOneBy(['name' => $universityName]);
-//
-//            if (!$university) continue;
-//
-//            $specialty = new Specialties();
-//            $specialty->setUniversity($university);
-//            $specialty->setName($specName);
-//            $specialty->setCode($specCode);
-//            $specialty->setDescription($description);
-//            $specialty->setPrice($price);
-//
-//            $this->entityManager->persist($specialty);
-//        }
-//
-//        $this->entityManager->flush();
-//
-//
+
 //
 //        $file = fopen(__DIR__ . '/../../public/All.csv', 'r');
 //        fgetcsv($file, 1000, ',');
@@ -265,95 +236,147 @@ class LoadDataCommand extends Command
 //        return self::SUCCESS;
 //    }
 
-        $subjectRepo = $this->entityManager->getRepository(Subject::class);
-        $specialtyRepo = $this->entityManager->getRepository(Specialties::class);
 
-        // Карта предметів: trimmed name → Subject
-        $subjects = $subjectRepo->findAll();
-        $subjectMap = [];
-        foreach ($subjects as $subject) {
-            $subjectMap[trim($subject->getName())] = $subject;
-        }
+//
 
-        // Карта спеціальностей: trimmed code → [Specialty, Specialty, ...]
-        $specialties = $specialtyRepo->findAll();
-        $specialtiesByCode = [];
-        foreach ($specialties as $s) {
-            $specialtiesByCode[trim($s->getCode())][] = $s;
-        }
+//        $file = fopen(__DIR__ . '/../../public/Specialt.csv', 'r');
+//        $lineNumber = 0;
+//        $specialtyMap = []; // [name + code] => Specialties
+//
+//        while (($data = fgetcsv($file))) {
+//            $lineNumber++;
+//            if ($lineNumber === 1) continue;
+//
+//            $universityName = trim($data[0]);
+//            $specName = trim($data[4]);
+//            $specCode = trim($data[3]);
+//
+//            if (!$specName || !$specCode) continue;
+//
+//            $university = $this->entityManager
+//                ->getRepository(University::class)
+//                ->findOneBy(['name' => $universityName]);
+//
+//            if (!$university) continue;
+//
+//            $key = $specCode . '|' . $specName;
+//
+//            if (!isset($specialtyMap[$key])) {
+//                $specialty = new Specialties();
+//                $specialty->setName($specName);
+//                $specialty->setCode($specCode);
+//                $this->entityManager->persist($specialty);
+//
+//                $specialtyMap[$key] = $specialty;
+//            }
+//
+//            $specialty = $specialtyMap[$key];
+//            $specialty->addUniversity($university);
+//        }
+//
+//        $this->entityManager->flush();
+//        $file = fopen(__DIR__ . '/../../public/Specialt.csv', 'r');
+//        $lineNumber = 0;
+//
+//        while (($data = fgetcsv($file))) {
+//            $lineNumber++;
+//            if ($lineNumber === 1) continue;
+//
+//            $universityName = trim($data[0]);
+//            $specCode = trim($data[3]);
+//            $specName = trim($data[4]);
+//            $price = $data[6];
+//
+//            if (!$specCode || !$specName || !$price) continue;
+//
+//            $university = $this->entityManager
+//                ->getRepository(University::class)
+//                ->findOneBy(['name' => $universityName]);
+//
+//            if (!$university) continue;
+//
+//            $specialty = $this->entityManager
+//                ->getRepository(Specialties::class)
+//                ->findOneBy([
+//                    'code' => $specCode,
+//                    'name' => $specName
+//                ]);
+//
+//            if (!$specialty) continue;
+//
+//            // перевірка: чи вже є така звʼязка?
+//            $existingOffer = $this->entityManager->getRepository(SpecialtyPrice::class)
+//                ->findOneBy([
+//                    'specialty' => $specialty,
+//                    'university' => $university,
+//                ]);
+//
+//            if (!$existingOffer) {
+//                $offer = new SpecialtyPrice();
+//                $offer->setSpecialty($specialty);
+//                $offer->setUniversity($university);
+//                $offer->setPrice($price);
+//                $this->entityManager->persist($offer);
+//            }
+//        }
+//
+//        $this->entityManager->flush();
+//        return Command::SUCCESS;
+//    }
+
 
         $file = fopen(__DIR__ . '/../../public/Coef.csv', 'r');
-        if (!$file) {
-            $output->writeln('<error>Не вдалося відкрити All.csv</error>');
-            return Command::FAILURE;
-        }
-
-        $headers = fgetcsv($file, 0, ',');
-        $headers = array_map('trim', array_slice($headers, 1)); // без "Code"
-
-        $created = 0;
-        $skipped = 0;
+        $header = fgetcsv($file, 0, ','); // перший рядок — назви предметів
+        $subjectNames = array_slice($header, 1); // припускаємо [0] — code
 
         while (($row = fgetcsv($file, 0, ',')) !== false) {
             $code = trim($row[0]);
-            if ($code === '') {
-                $skipped++;
-                continue;
-            }
 
-            $values = array_slice($row, 1);
+            $specialties = $this->entityManager->getRepository(Specialties::class)
+                ->findBy(['code' => $code]);
 
-            if (!isset($specialtiesByCode[$code])) {
-                $output->writeln("⛔ Спеціальність з кодом [$code] не знайдена.");
-                $skipped++;
-                continue;
-            }
+            if (!$specialties) continue;
 
-            foreach ($specialtiesByCode[$code] as $specialty) {
-                foreach ($values as $i => $rawValue) {
-                    $value = str_replace(',', '.', trim($rawValue));
-                    if (!is_numeric($value)) {
-                        continue;
-                    }
+            for ($i = 1; $i < count($row); $i++) {
+                $subjectName = $subjectNames[$i - 1];
+                $valueStr = str_replace(',', '.', $row[$i]);
+                $value = floatval($valueStr);
+                if ($value === 0.0) continue;
 
-                    $subjectName = $headers[$i] ?? null;
-                    $subject = $subjectMap[$subjectName] ?? null;
+                $subject = $this->entityManager->getRepository(Subject::class)
+                    ->findOneBy(['name' => $subjectName]);
 
-                    if (!$subject) {
-                        $output->writeln("⚠️ Пропущено предмет: [$subjectName]");
-                        continue;
-                    }
+                if (!$subject) continue;
 
+                // Перевіряємо, чи вже є Number з таким subject + value
+                $existing = $this->entityManager->getRepository(Number::class)
+                    ->createQueryBuilder('n')
+                    ->leftJoin('n.subjects', 's')
+                    ->where('s.id = :subjectId')
+                    ->andWhere('n.value = :value')
+                    ->setParameter('subjectId', $subject->getId())
+                    ->setParameter('value', $value)
+                    ->getQuery()
+                    ->getOneOrNullResult();
+
+                if ($existing) {
+                    $number = $existing;
+                } else {
                     $number = new Number();
-                    $number->setSpecialty($specialty);
-                    $number->setSubject($subject);
-                    $number->setValue((float)$value);
-
+                    $number->setValue($value);
+                    $number->addSubject($subject);
                     $this->entityManager->persist($number);
-                    $created++;
+                }
 
-                    if ($created % 1000 === 0) {
-                        $this->entityManager->flush();
-                        $output->writeln("🔄 $created записів збережено...");
-                        foreach ($this->entityManager->getUnitOfWork()->getIdentityMap()[Number::class] ?? [] as $persisted) {
-                            $this->entityManager->detach($persisted);
-                        }
+                foreach ($specialties as $specialty) {
+                    if (!$number->getSpecialties()->contains($specialty)) {
+                        $number->addSpecialty($specialty);
                     }
                 }
             }
         }
 
-        fclose($file);
         $this->entityManager->flush();
-        foreach ($this->entityManager->getUnitOfWork()->getIdentityMap()[Number::class] ?? [] as $persisted) {
-            $this->entityManager->detach($persisted);
-        }
-
-        $output->writeln("<info>✅ Імпорт завершено: додано $created звʼязків.</info>");
-        if ($skipped > 0) {
-            $output->writeln("<comment>⚠️ Пропущено $skipped рядків (порожні або без збігу).</comment>");
-        }
-
         return Command::SUCCESS;
     }
 

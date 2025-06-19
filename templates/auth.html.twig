@@ -12,7 +12,13 @@
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
         <button type="submit" class="auth-btn">Увійти</button>
     </form>
-
+    {% if error %}
+        <form action="{{ path('app_forgot_password_request') }}" method="get">
+            <button class="auth-btn secondary-btn" style="margin-top: 10px;">
+                Забули пароль?
+            </button>
+        </form>
+    {% endif %}
     <div class="divider">Або</div>
 
 {#    <div class="social-login">#}
@@ -24,5 +30,6 @@
     <div class="auth-footer">
       Не маєте акаунту? <a href="{{ path('register') }}">Зареєструватися</a>
     </div>
+
   </div>
 {% endblock %}

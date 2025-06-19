@@ -362,7 +362,7 @@
 .danger-btn {
     background-color: #a33232;
     color: #fff;
-    margin-left: 2rem;
+    /*margin-left: 2rem;*/
 }
 .danger-btn:hover {
     background-color: #611313;

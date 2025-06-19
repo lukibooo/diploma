@@ -22,13 +22,14 @@ class FilterService
         $subjects = $request->request->all();
 
         $qb = $this->em->createQueryBuilder()
-            ->select('s', 'u', 'c', 'n', 'subj')
+            ->select('s', 'u', 'c', 'n', 'subj', 'sp')
             ->from(Specialties::class, 's')
-            ->leftJoin('s.university', 'u')
+            ->leftJoin('s.universities', 'u')
             ->leftJoin('u.city', 'c')
             ->leftJoin('s.numbers', 'n')
-            ->leftJoin('n.subject', 'subj')
-//            ->setMaxResults(40)
+            ->leftJoin('n.subjects', 'subj')
+            ->leftJoin('s.specialtyPrice', 'sp')
+
         ;
 
         if ($specialtyName) {
@@ -39,17 +40,58 @@ class FilterService
         if ($city) {
             $qb->andWhere('c.name = :city')->setParameter('city', $city);
         }
+
         if (is_numeric($priceFrom)) {
-            $qb->andWhere('s.price >= :priceFrom')->setParameter('priceFrom', $priceFrom);
+            $qb->andWhere('sp.price >= :priceFrom')->setParameter('priceFrom', $priceFrom);
         }
 
         if (is_numeric($priceTo)) {
-            $qb->andWhere('s.price <= :priceTo')->setParameter('priceTo', (int) $priceTo);
+            $qb->andWhere('sp.price <= :priceTo')->setParameter('priceTo', $priceTo);
         }
 
         if ($military) {
             $qb->andWhere('u.military = true');
         }
+
+        return $qb->getQuery()->getResult();
+//        $city = $request->request->get('city');
+//        $specialtyName = $request->request->get('specialty');
+//        $priceFrom = $request->request->get('price_from');
+//        $priceTo = $request->request->get('price_to');
+//        $military = $request->request->get('military');
+//        $subjects = $request->request->all();
+//
+//        $qb = $this->em->createQueryBuilder()
+//            ->select('s', 'u', 'c', 'n', 'subj')
+//            ->from(Specialties::class, 's')
+//            ->leftJoin('s.universities', 'u')
+//            ->leftJoin('u.city', 'c')
+//            ->leftJoin('s.numbers', 'n')
+//            ->leftJoin('n.subjects', 'subj')
+//        ;
+//
+//        if ($specialtyName) {
+//            $qb->andWhere('LOWER(TRIM(s.name)) = :specialty')
+//                ->setParameter('specialty', mb_strtolower(trim($specialtyName)));
+//        }
+//
+//        if ($city) {
+//            $qb->andWhere('c.name = :city')->setParameter('city', $city);
+//        }
+//        if (is_numeric($priceFrom)) {
+//            $qb->andWhere('s.price >= :priceFrom')->setParameter('priceFrom', $priceFrom);
+//        }
+//
+//        if (is_numeric($priceTo)) {
+//            $qb->andWhere('s.price <= :priceTo')->setParameter('priceTo', (int) $priceTo);
+//        }
+//
+//        if ($military) {
+//            $qb->andWhere('u.military = true');
+//        }
+//        return $qb->getQuery()->getResult();
+
+    }
 
 //        $specialties = $qb->getQuery()->getResult();
 //        $output = [];
@@ -90,9 +132,6 @@ class FilterService
 //                'matchedSubjects' => $matchedSubjects,
 //            ];
 //        }
-        return $qb->getQuery()->getResult();
-
-    }
 //    public function countFilteredResults(array $filters): int
 //    {
 //        $qb = $this->em->createQueryBuilder()

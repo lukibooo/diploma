@@ -15,13 +15,11 @@ class Number
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Specialties::class, inversedBy: 'numbers')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Specialties $specialty = null;
+    #[ORM\ManyToMany(targetEntity: Specialties::class, inversedBy: "numbers")]
+    private Collection $specialties;
 
-    #[ORM\ManyToOne(targetEntity: Subject::class, inversedBy: 'numbers')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Subject $subject = null;
+    #[ORM\ManyToMany(targetEntity: Subject::class, inversedBy: "numbers")]
+    private Collection $subjects;
 
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $value = null;
@@ -31,28 +29,45 @@ class Number
         return $this->id;
     }
 
-    public function getSpecialty(): ?Specialties
+    public function __construct()
     {
-        return $this->specialty;
+        $this->subjects = new ArrayCollection();
+        $this->specialties = new ArrayCollection();
+    }
+    public function getSubjects(): Collection
+    {
+        return $this->subjects;
     }
 
-    public function setSpecialty(?Specialties $specialty): static
+    public function addSubject(Subject $subject): self
     {
-        $this->specialty = $specialty;
+        if (!$this->subjects->contains($subject)) {
+            $this->subjects[] = $subject;
+        }
+
         return $this;
     }
 
-    public function getSubject(): ?Subject
+
+    public function getSpecialties(): Collection
     {
-        return $this->subject;
+        return $this->specialties;
     }
 
-    public function setSubject(?Subject $subject): static
+    public function addSpecialty(Specialties $specialty): self
     {
-        $this->subject = $subject;
+        if (!$this->specialties->contains($specialty)) {
+            $this->specialties[] = $specialty;
+        }
+
         return $this;
     }
 
+    public function removeSpecialty(Specialties $specialty): self
+    {
+        $this->specialties->removeElement($specialty);
+        return $this;
+    }
     public function getValue(): ?float
     {
         return $this->value;

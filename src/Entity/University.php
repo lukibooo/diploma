@@ -39,7 +39,7 @@ class University
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $military = null;
 
-    #[ORM\OneToMany(targetEntity: Specialties::class, mappedBy: 'university')]
+    #[ORM\ManyToMany(targetEntity: Specialties::class, mappedBy: "universities")]
     private Collection $specialties;
 
     public function __construct()
