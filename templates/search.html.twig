@@ -197,8 +197,9 @@
             {% set weightedScore = 0 %}
 
             {% if universities is not empty %}
-                {% for specialty in universities %}
-                {% for university in specialty.universities %}
+                {% for item in universities %}
+                    {% set specialty = item.specialty %}
+                    {% set university = item.university %}
 
                     <div class="university-card" onclick="location.href='{{ path('university_detail', {id: university.id}) ~ '?specialty=' ~ specialty.id ~ '&subjects=' ~ selectedSubjects|join(',') ~ '&scores=' ~ userSubjects|map(s => s.subject ~ ':' ~ s.score)|join(',') }}'">
                         <div class="univ-title">
@@ -233,7 +234,7 @@
                                     {% endif %}
                                 {% endfor %}
 
-                                {% set totalScore = 0 %}
+{#                                {% set totalScore = 0 %}#}
 
                                 {% if specialty.numbers is not empty %}
                                     {% for number in specialty.numbers %}
@@ -241,8 +242,8 @@
                                             {% set subjectName = subj.name %}
                                             {% for userSub in userSubjects %}
                                                 {% if userSub.subject == subjectName %}
-                                                    {% set contrib = userSub.score * number.value %}
-                                                    {% set totalScore = totalScore + contrib %}
+{#                                                    {% set contrib = userSub.score * number.value %}#}
+{#                                                    {% set totalScore = totalScore + contrib %}#}
                                                     <div class="subject-line">
                                                         <span>{{ subjectName }}</span>
                                                         <span>{{ number.value }}</span>
@@ -251,32 +252,31 @@
                                             {% endfor %}
                                         {% endfor %}
                                     {% endfor %}
-                                {% else %}
-                                    {% set rawCoefficients = [] %}
-                                    {% set coeffTotal = 0 %}
-                                    {% for i in 0..(userSubjects|length - 1) %}
-                                        {% set r = random([20, 25, 30, 35, 40, 45, 50]) %}
-                                        {% set rawCoefficients = rawCoefficients|merge([r]) %}
-                                        {% set coeffTotal = coeffTotal + r %}
-                                    {% endfor %}
-
-                                    {% for i in 0..(userSubjects|length - 1) %}
-                                        {% set coeff = rawCoefficients[i] / coeffTotal %}
-                                        {% set contrib = userSubjects[i].score * coeff %}
-                                        {% set totalScore = totalScore + contrib %}
-                                        <div class="subject-line">
-                                            <span>{{ userSubjects[i].subject }}</span>
-                                            <span>{{ ((coeff * 20)|round / 20)|number_format(2, '.', '') }}</span>
-                                        </div>
-                                    {% endfor %}
                                 {% endif %}
+{#                                    {% set rawCoefficients = [] %}#}
+{#                                    {% set coeffTotal = 0 %}#}
+{#                                    {% for i in 0..(userSubjects|length - 1) %}#}
+{#                                        {% set r = random([20, 25, 30, 35, 40, 45, 50]) %}#}
+{#                                        {% set rawCoefficients = rawCoefficients|merge([r]) %}#}
+{#                                        {% set coeffTotal = coeffTotal + r %}#}
+{#                                    {% endfor %}#}
 
-                                {% set finalScore = totalScore > 178 ? 178 : totalScore %}
-                                <div class="score">Ваш бал: {{ finalScore|round(2) }} б.</div>
+{#                                    {% for i in 0..(userSubjects|length - 1) %}#}
+{#                                        {% set coeff = rawCoefficients[i] / coeffTotal %}#}
+{#                                        {% set contrib = userSubjects[i].score * coeff %}#}
+{#                                        {% set totalScore = totalScore + contrib %}#}
+{#                                        <div class="subject-line">#}
+{#                                            <span>{{ userSubjects[i].subject }}</span>#}
+{#                                            <span>{{ ((coeff * 20)|round / 20)|number_format(2, '.', '') }}</span>#}
+{#                                        </div>#}
+{#                                    {% endfor %}#}
+{#                                {% endif %}#}
+
+{#                                {% set finalScore = totalScore > 178 ? 178 : totalScore %}#}
+{#                                <div class="score">Ваш бал: {{ finalScore|round(2) }} б.</div>#}
                             </div>
                         </div>
                     </div>
-                {% endfor %}
                 {% endfor %}
             {% else %}
                 <div class="no-results-block">
@@ -286,7 +286,9 @@
             {% endif %}
         {% endif %}
 
-        {{ knp_pagination_render(universities) }}
+        {% if universities is not null %}
+            {{ knp_pagination_render(universities) }}
+        {% endif %}
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {

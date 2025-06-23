@@ -123,14 +123,43 @@ class MainController extends AbstractController
                 ];
             }
         }
+        $page = max(1, (int) $request->query->get('page', 1));
+        $universities = null;
+        $filtersApplied = false;
+        $filters = [];
 
+        if ($request->isMethod('POST')) {
+            $filters = $request->request->all();
+            $session->set('search_filters', $filters);
+        } else {
+            // Якщо GET — пробуємо отримати фільтри з сесії
+            $filters = $session->get('search_filters', []);
+        }
+
+        // Якщо є збережені фільтри — фільтруємо
+        if (!empty($filters)) {
+            $results = $filterService->getFilteredResultsFromArray($filters);
+            $universities = $paginator->paginate($results, $page, 5);
+            $filtersApplied = true;
+        }
+//        if ($request->isMethod('POST')) {
+//            $results = $filterService->getFilteredResults($request);
+//            $filtersApplied = true;
+//            $session->set('search_filters', $filters);
+//
+//            $universities = $paginator->paginate(
+//                $results, // масив результатів
+//                $request->query->getInt('page', 1),
+//                5 // або скільки хочеш
+//            );
+//        }
 //        $universities = null;
-        $query = $filterService->getFilteredResults($request);
-        $pagination = $paginator->paginate(
-            $query,
-            $request->query->getInt('page', 1),
-            1
-        );
+//        $query = $filterService->getFilteredResults($request);
+//        $pagination = $paginator->paginate(
+//            $query,
+//            $request->query->getInt('page', 1),
+//            10
+//        );
 //        if ($request->isMethod('POST') && !empty($userSubjects)) {
 //
 //            $universities = $filterService->getFilteredResults(
@@ -144,8 +173,8 @@ class MainController extends AbstractController
 //        }
         $currentUser = $authService->getCurrentUser($session);
         return $this->render('search.html.twig', [
-            'universities' => $pagination,
-//            'universities' => $universities,
+//            'universities' => $pagination,
+            'universities' => $universities,
             'subjects' => $subjects,
             'cities' => $cities,
             'specialties' => $specialties,
@@ -156,7 +185,7 @@ class MainController extends AbstractController
             'priceFrom' => $priceFrom,
             'priceTo' => $priceTo,
             'military' => $military,
-            'filtersApplied' => $request->isMethod('POST'),
+            'filtersApplied' => $filtersApplied,
             'currentUser' => $currentUser,
             'userSubjects1' => $userSubjects1,
             'user' => $this->getUser()
