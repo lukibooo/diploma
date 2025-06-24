@@ -37,7 +37,9 @@
     </header>
 
     <header class="mobile-header">
-        <img src="{{ asset('images/lightbulb.svg') }}" alt="Навчайся" class="logo">
+        <a href="{{ path('main') }}" class="site-logo">
+            <img src="{{ asset('images/lightbulb.svg') }}" alt="Навчайся" class="logo">
+        </a>
         {% set titles = {
             'main': 'Головна',
             'search': 'Пошук',
@@ -55,7 +57,7 @@
             <a href="main">Головна</a>
             <a href="about">Про нас</a>
             <a href="search">Пошук</a>
-            <a href="{{ path(currentUser ? 'profile' : 'app_login') }}">Профіль</a>
+            <a href="profile">Профіль</a>
             <a href="news">Новини</a>
         </nav>
     </header>
